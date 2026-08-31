@@ -135,6 +135,10 @@ export default async function activate(cl) {
   const dateStr = (d) =>
     `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
   const todayStr = () => dateStr(new Date());
+  // Sam regex przepuszcza 2026-02-31 — Date przekręci to na 3 marca, więc
+  // sprawdzamy, czy data wraca z parsowania niezmieniona.
+  const isRealDate = (str) =>
+    /^\d{4}-\d{2}-\d{2}$/.test(str) && dateStr(parseDate(str)) === str;
   const parseDate = (s) => {
     const [y, m, d] = String(s).split("-").map(Number);
     return new Date(y, (m || 1) - 1, d || 1);
@@ -1822,8 +1826,7 @@ export default async function activate(cl) {
       const to = bg.querySelector("#e-to").value.trim();
       const note = bg.querySelector("#e-note").value.trim();
       if (!title) return fail("Podaj tytuł wydarzenia");
-      if (!/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(date))
-        return fail("Podaj datę w formacie RRRR-MM-DD");
+      if (!isRealDate(date)) return fail("Podaj istniejącą datę w formacie RRRR-MM-DD");
       if (from && !TIME_RE.test(from)) return fail("Godzina od: format HH:MM");
       if (to && !TIME_RE.test(to)) return fail("Godzina do: format HH:MM");
       if (to && !from) return fail("Podaj godzinę początku albo zostaw obie puste");
@@ -2222,7 +2225,7 @@ export default async function activate(cl) {
   const shortName = (s) => (s.length > 18 ? s.slice(0, 17) + "…" : s);
   // Kolory przychodzą z Google, więc do atrybutu style trafia wyłącznie
   // sprawdzony hex — nie chcemy wstrzykiwać cudzego tekstu do CSS.
-  const HEX_RE = /^#[0-9a-fA-F]{3,8}$/;
+  const HEX_RE = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;
   const safeColor = (c, fallback = "var(--accent,#89b4fa)") =>
     HEX_RE.test(c || "") ? c : fallback;
 
