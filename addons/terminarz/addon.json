@@ -2,7 +2,7 @@
   "id": "terminarz",
   "name": "Terminarz",
   "icon": "📅",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "Rejestr zobowiązań cyklicznych i terminowych (ubezpieczenia, leasing, podatki, domeny, abonamenty) z przypisanym właścicielem. Każde zobowiązanie generuje terminy ze statusami (nadchodząca / do potwierdzenia / potwierdzona / przegapiona) i historią płatności, widoczne też w kalendarzu Dzień / Miesiąc / Rok.",
   "author": "Cyber Life contributors",
   "category": "productivity",

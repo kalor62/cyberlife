@@ -25,6 +25,7 @@ type CalendarInfo struct {
 	Primary  bool   `json:"primary,omitempty"`
 	ReadOnly bool   `json:"readOnly,omitempty"`
 	Shared   bool   `json:"shared"`
+	Color    string `json:"color,omitempty"`
 }
 
 // GetCalendarConfig lists connected accounts with their calendars. A failing
@@ -56,7 +57,7 @@ func (a *App) GetCalendarConfig() []CalendarAccountInfo {
 		for _, c := range cals {
 			info.Calendars = append(info.Calendars, CalendarInfo{
 				ID: c.ID, Name: c.Name, Primary: c.Primary, ReadOnly: c.ReadOnly,
-				Shared: shared[c.ID],
+				Shared: shared[c.ID], Color: c.Color,
 			})
 		}
 		out = append(out, info)
@@ -158,6 +159,7 @@ func (a *App) calendarHooks() api.CalendarHooks {
 					}
 					cals = append(cals, map[string]any{
 						"id": c.ID, "name": c.Name, "shared": true, "readOnly": c.ReadOnly,
+						"color": c.Color,
 					})
 				}
 				out = append(out, map[string]any{"email": acc.Email, "calendars": cals})

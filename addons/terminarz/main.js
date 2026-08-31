@@ -445,7 +445,7 @@ export default async function activate(cl) {
   const K_SHIFT = "shift"; // { "oblId|termin": "nowa data" } — przesunięcia zrobione w Google
   const K_GONE = "gone"; // { "oblId|termin": "YYYY-MM-DD" } — event skasowany w Google
   const K_EXT = "gext"; // obce wydarzenia z udostępnionych kalendarzy + czas pobrania
-  const K_PREFS = "prefs"; // { showGoogle: bool }
+  const K_PREFS = "prefs"; // { hiddenCals: [calendarId] }
   const REMIND_AHEAD = 7; // pierwsze ostrzeżenie: tyle dni przed terminem
   const MISSED_LOOKBACK = 30; // jak stare przegapione jeszcze zgłaszamy
   const MAX_PER_RUN = 5; // żeby zaległości nie wysypały serii powiadomień
@@ -643,7 +643,7 @@ export default async function activate(cl) {
               .map((it) => {
                 if (it.kind === "google")
                   return `<div class="tz-widget-row tz-ext" title="${escAttr(it.account || "")}">
-                    <span class="tz-w-name">📅 ${esc(it.title)}</span>
+                    <span class="tz-w-name"><span class="tz-cdot" style="background:${escAttr(safeColor(it.color))}"></span> ${esc(it.title)}</span>
                     <span class="tz-hint">${esc(it.time || "cały dzień")}</span>
                   </div>`;
                 const ow = ownerById(it.ownerId);
@@ -786,6 +786,8 @@ export default async function activate(cl) {
         (acc.calendars || []).map((c) => ({
           id: c.id,
           label: `${acc.email} / ${c.name}`,
+          name: c.name,
+          color: c.color || "",
           readOnly: !!c.readOnly,
         })),
       );
@@ -998,14 +1000,29 @@ export default async function activate(cl) {
   function goneEvents() {
     return cache[K_GONE] && typeof cache[K_GONE] === "object" ? cache[K_GONE] : {};
   }
+  // Widocznością steruje lista ukrytych kalendarzy. Stary, globalny
+  // przełącznik `showGoogle: false` czytamy jako „wszystkie ukryte", żeby
+  // aktualizacja addonu nie odsłoniła nagle wydarzeń komuś, kto je wyłączył.
   function prefs() {
-    const p = cache[K_PREFS];
-    return { showGoogle: p && "showGoogle" in p ? !!p.showGoogle : true };
-  }
-  async function setPref(key, value) {
-    await put(K_PREFS, { ...prefs(), [key]: value });
+    const p = cache[K_PREFS] && typeof cache[K_PREFS] === "object" ? cache[K_PREFS] : {};
+    return {
+      hiddenCals: Array.isArray(p.hiddenCals)
+        ? p.hiddenCals
+        : p.showGoogle === false
+          ? sharedCalendars.map((c) => c.id)
+          : [],
+    };
   }
 
+  function calVisible(calendarId) {
+    return !prefs().hiddenCals.includes(calendarId);
+  }
+
+  async function setCalVisible(calendarId, visible) {
+    const hidden = prefs().hiddenCals.filter((id) => id !== calendarId);
+    if (!visible) hidden.push(calendarId);
+    await put(K_PREFS, { hiddenCals: hidden });
+  }
   // Data, pod którą wystąpienie faktycznie żyje — po uwzględnieniu
   // przesunięcia zrobionego w Google.
   function effectiveDue(oblId, due) {
@@ -1050,6 +1067,8 @@ export default async function activate(cl) {
             title: ev.title || "(bez tytułu)",
             start: ev.start,
             allDay: !!ev.allDay,
+            // kolor własny wydarzenia, a w jego braku kolor kalendarza
+            color: ev.color || calRef.color || "",
           });
         }
         stats.push({ label: calRef.label, ours, external, error: "" });
@@ -1250,9 +1269,14 @@ export default async function activate(cl) {
       .tz-gmark{font-size:12px;opacity:.75;cursor:help;}
       /* obce wydarzenia z Google (3/3) — przygaszone i tylko do odczytu */
       .tz-ext{opacity:.62;}
-      .tz-ext-icon{font-size:12px;}
-      .tz-pill.ext{background:var(--bg-secondary,#181825);color:var(--text-secondary,#bac2de);opacity:.75;font-style:italic;}
-      .tz-ext-toggle{display:flex;align-items:center;gap:6px;font-size:12px;white-space:nowrap;}
+      .tz-pill.ext{background:var(--bg-secondary,#181825);color:var(--text-secondary,#bac2de);opacity:.85;font-style:italic;border-left:3px solid var(--accent,#89b4fa);}
+      .tz-cdot{display:inline-block;width:9px;height:9px;border-radius:50%;flex:none;}
+      .tz-swatch{display:inline-block;width:10px;height:10px;border-radius:3px;flex:none;}
+      .tz-calchk{display:inline-flex;align-items:center;gap:6px;font-size:12px;white-space:nowrap;}
+      .tz-wgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
+      .tz-wcell{border:1px solid var(--border,#45475a);border-radius:8px;min-height:180px;padding:6px;display:flex;flex-direction:column;gap:3px;cursor:pointer;min-width:0;}
+      .tz-wcell:hover{background:var(--bg-secondary,#181825);}
+      .tz-whead{display:flex;align-items:center;justify-content:space-between;gap:4px;color:var(--text-muted,#9399b2);font-size:11px;font-weight:600;text-transform:uppercase;}
       .tz-cal-foot{padding:6px 14px;border-top:1px solid var(--border,#45475a);color:var(--text-muted,#9399b2);font-size:11px;}
       .tz-gmark.warn{color:var(--error,#f38ba8);opacity:1;}
       /* widgets Dzisiaj / Miesiąc (6/6) */
@@ -1820,8 +1844,8 @@ export default async function activate(cl) {
         return fail(friendlyGcalError(err && err.message ? err.message : String(err)));
       }
       // Bez tego świeżo dodane wydarzenie nie pojawiłoby się w widokach,
-      // gdy filtr obcych wydarzeń jest wyłączony — wygląda jak zgubiony zapis.
-      if (!prefs().showGoogle) await setPref("showGoogle", true);
+      // gdy jego kalendarz jest odznaczony — wygląda jak zgubiony zapis.
+      if (!calVisible(calId)) await setCalVisible(calId, true);
       await fetchExternalEvents();
       if (afterSave) afterSave();
       const [winFrom, winTo] = gcalWindow();
@@ -2177,7 +2201,7 @@ export default async function activate(cl) {
   // ------------------------------------------------------------- calendar (task 3/6)
   // View state survives re-renders; anchor is the focused date.
   const cal = {
-    view: "month", // "day" | "month" | "year"
+    view: "month", // "day" | "week" | "month" | "year"
     anchor: todayStr(),
     // Day the user actually picked. Month/year navigation clamps the anchor to
     // the target month's length, so without remembering the intent 31.01 → 28.02
@@ -2196,6 +2220,11 @@ export default async function activate(cl) {
   const DOW = ["pon", "wt", "śr", "czw", "pt", "sob", "niedz"];
   const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
   const shortName = (s) => (s.length > 18 ? s.slice(0, 17) + "…" : s);
+  // Kolory przychodzą z Google, więc do atrybutu style trafia wyłącznie
+  // sprawdzony hex — nie chcemy wstrzykiwać cudzego tekstu do CSS.
+  const HEX_RE = /^#[0-9a-fA-F]{3,8}$/;
+  const safeColor = (c, fallback = "var(--accent,#89b4fa)") =>
+    HEX_RE.test(c || "") ? c : fallback;
 
   function filteredObligations() {
     return obligations().filter(
@@ -2262,6 +2291,10 @@ export default async function activate(cl) {
       setAnchor(addDays(cal.anchor, dir));
       return;
     }
+    if (cal.view === "week") {
+      setAnchor(addDays(cal.anchor, dir * 7));
+      return;
+    }
     const d = parseDate(cal.anchor);
     const step = cal.view === "month" ? dir : dir * 12;
     cal.anchor = mkDue(d.getFullYear(), d.getMonth() + step, cal.dayIntent);
@@ -2271,6 +2304,16 @@ export default async function activate(cl) {
     const d = parseDate(cal.anchor);
     if (cal.view === "day")
       return `${d.getDate()} ${MONTHS_GEN[d.getMonth()]} ${d.getFullYear()}`;
+    if (cal.view === "week") {
+      const [s, e] = weekRange(cal.anchor);
+      const ds = parseDate(s);
+      const de = parseDate(e);
+      if (ds.getFullYear() !== de.getFullYear())
+        return `${ds.getDate()} ${MONTHS_GEN[ds.getMonth()]} ${ds.getFullYear()} – ${de.getDate()} ${MONTHS_GEN[de.getMonth()]} ${de.getFullYear()}`;
+      if (ds.getMonth() !== de.getMonth())
+        return `${ds.getDate()} ${MONTHS_GEN[ds.getMonth()]} – ${de.getDate()} ${MONTHS_GEN[de.getMonth()]} ${de.getFullYear()}`;
+      return `${ds.getDate()}–${de.getDate()} ${MONTHS_GEN[ds.getMonth()]} ${de.getFullYear()}`;
+    }
     if (cal.view === "month")
       return `${capitalize(MONTHS[d.getMonth()])} ${d.getFullYear()}`;
     return String(d.getFullYear());
@@ -2304,6 +2347,43 @@ export default async function activate(cl) {
     return `<div class="tz-cal-sums"><b>Razem: ${formatAmount(total)}</b> · ${parts.join(" · ")}</div>`;
   }
 
+  // Jedna pigułka pozycji dnia — używa jej siatka miesiąca i tygodnia.
+  function itemPillHtml(it) {
+    if (it.kind === "google")
+      return `<span class="tz-pill ext" style="border-left-color:${escAttr(safeColor(it.color))}" title="${escAttr(it.account || "")}">📅 ${esc(shortName(it.title))}</span>`;
+    return `<span class="tz-pill ${it.status}" ${it.gone ? 'title="Event usunięty w Google"' : ""}>${it.gone ? "⚠ " : ""}${esc(shortName(it.title))} · ${formatAmount(it.amount)}</span>`;
+  }
+
+  function weekRange(anchor) {
+    const back = (parseDate(anchor).getDay() + 6) % 7; // pon = 0
+    const start = addDays(anchor, -back);
+    return [start, addDays(start, 6)];
+  }
+
+  function weekViewHtml(confMap) {
+    const [start, end] = weekRange(cal.anchor);
+    const items = itemsForRange(start, end, confMap);
+    const byDay = new Map();
+    for (const it of items) {
+      if (!byDay.has(it.due)) byDay.set(it.due, []);
+      byDay.get(it.due).push(it);
+    }
+    const today = todayStr();
+    let cells = "";
+    for (let i = 0; i < 7; i++) {
+      const due = addDays(start, i);
+      const dayItems = byDay.get(due) || [];
+      cells += `<div class="tz-wcell" data-day="${escAttr(due)}" title="Pokaż dzień">
+        <div class="tz-whead">
+          <span>${DOW[i]}</span>
+          <span class="tz-dnum ${due === today ? "today" : ""}">${parseDate(due).getDate()}</span>
+        </div>
+        ${dayItems.map(itemPillHtml).join("") || `<span class="tz-more">—</span>`}
+      </div>`;
+    }
+    return `${sumsBarHtml(items)}<div class="tz-body"><div class="tz-wgrid">${cells}</div></div>`;
+  }
+
   function monthGridHtml(confMap) {
     const d = parseDate(cal.anchor);
     const y = d.getFullYear();
@@ -2330,13 +2410,7 @@ export default async function activate(cl) {
       const more = dayItems.length - shown.length;
       cells += `<div class="tz-mcell" data-day="${escAttr(due)}" title="Pokaż dzień">
         <span class="tz-dnum ${due === today ? "today" : ""}">${day}</span>
-        ${shown
-          .map((it) =>
-            it.kind === "google"
-              ? `<span class="tz-pill ext" title="${escAttr(it.account || "")}">📅 ${esc(shortName(it.title))}</span>`
-              : `<span class="tz-pill ${it.status}" ${it.gone ? 'title="Event usunięty w Google"' : ""}>${it.gone ? "⚠ " : ""}${esc(shortName(it.title))} · ${formatAmount(it.amount)}</span>`,
-          )
-          .join("")}
+        ${shown.map(itemPillHtml).join("")}
         ${more > 0 ? `<span class="tz-more">+${more} więcej</span>` : ""}
       </div>`;
     }
@@ -2351,7 +2425,7 @@ export default async function activate(cl) {
       .map((it) => {
         if (it.kind === "google") {
           return `<div class="tz-day-row tz-ext" title="${escAttr(it.account || "")}">
-            <span class="tz-ext-icon">📅</span>
+            <span class="tz-cdot" style="background:${escAttr(safeColor(it.color))}"></span>
             <div style="flex:1;min-width:0">${esc(it.title)}<div class="tz-cat">${esc(it.account || "")}</div></div>
             ${it.time ? `<span class="tz-hint">${esc(it.time)}</span>` : `<span class="tz-hint">cały dzień</span>`}
           </div>`;
@@ -2394,9 +2468,10 @@ export default async function activate(cl) {
   }
 
   function externalItems(startStr, endStr) {
-    if (!prefs().showGoogle) return [];
+    const hidden = prefs().hiddenCals;
     return externalCache()
-      .items.map((e) => ({ e, ...extDayAndTime(e) }))
+      .items.filter((e) => !hidden.includes(e.calendar))
+      .map((e) => ({ e, ...extDayAndTime(e) }))
       .filter(({ day }) => day >= startStr && day <= endStr)
       .map(({ e, day, time }) => ({
         kind: "google",
@@ -2405,6 +2480,8 @@ export default async function activate(cl) {
         status: "external",
         title: e.title,
         account: e.account,
+        calendar: e.calendar,
+        color: e.color || "",
         amount: null,
       }));
   }
@@ -2476,9 +2553,11 @@ export default async function activate(cl) {
     const body =
       cal.view === "day"
         ? dayViewHtml(confMap)
-        : cal.view === "year"
-          ? yearViewHtml(confMap)
-          : monthGridHtml(confMap);
+        : cal.view === "week"
+          ? weekViewHtml(confMap)
+          : cal.view === "year"
+            ? yearViewHtml(confMap)
+            : monthGridHtml(confMap);
 
     el.innerHTML = `
       <div class="tz-wrap">
@@ -2500,6 +2579,7 @@ export default async function activate(cl) {
           }
           <div class="tz-cal-views">
             <button data-view="day" class="${cal.view === "day" ? "active" : ""}" title="d">Dzień</button>
+            <button data-view="week" class="${cal.view === "week" ? "active" : ""}" title="w">Tydzień</button>
             <button data-view="month" class="${cal.view === "month" ? "active" : ""}" title="m">Miesiąc</button>
             <button data-view="year" class="${cal.view === "year" ? "active" : ""}" title="r">Rok</button>
           </div>
@@ -2508,10 +2588,15 @@ export default async function activate(cl) {
           ${ownerChipsHtml()}
           ${
             sharedCalendars.length
-              ? `<label class="settings-checkbox tz-ext-toggle" title="Pokazuj w widokach zwykłe wydarzenia z podłączonych kalendarzy">
-                  <input type="checkbox" id="cal-ext" ${prefs().showGoogle ? "checked" : ""}>
-                  <span>Pokaż eventy Google</span>
-                </label>`
+              ? sharedCalendars
+                  .map(
+                    (c) => `<label class="settings-checkbox tz-calchk" title="${escAttr(c.label)}">
+                      <input type="checkbox" data-cal="${escAttr(c.id)}" ${calVisible(c.id) ? "checked" : ""}>
+                      <span class="tz-swatch" style="background:${escAttr(safeColor(c.color))}"></span>
+                      <span>${esc(shortName(c.name || c.label))}</span>
+                    </label>`,
+                  )
+                  .join("")
               : ""
           }
           <select class="tz-select" id="cal-cat" style="width:auto">
@@ -2550,7 +2635,10 @@ export default async function activate(cl) {
     if (addEvBtn)
       addEvBtn.addEventListener("click", () =>
         // W widoku dnia sensownym domyślnym terminem jest oglądany dzień
-        openExternalEvent(cal.view === "day" ? cal.anchor : todayStr(), rerender),
+        openExternalEvent(
+          cal.view === "day" || cal.view === "week" ? cal.anchor : todayStr(),
+          rerender,
+        ),
       );
     el.querySelectorAll(".tz-cal-views button").forEach((b) =>
       b.addEventListener("click", () => {
@@ -2566,18 +2654,18 @@ export default async function activate(cl) {
         rerender();
       }),
     );
-    const extToggle = el.querySelector("#cal-ext");
-    if (extToggle)
-      extToggle.addEventListener("change", async (e) => {
-        await setPref("showGoogle", e.target.checked);
+    el.querySelectorAll(".tz-calchk input[data-cal]").forEach((chk) =>
+      chk.addEventListener("change", async () => {
+        await setCalVisible(chk.getAttribute("data-cal"), chk.checked);
         rerender();
         refreshWidgets();
-      });
+      }),
+    );
     el.querySelector("#cal-cat").addEventListener("change", (e) => {
       cal.category = e.target.value;
       rerender();
     });
-    el.querySelectorAll(".tz-mcell[data-day]").forEach((c) =>
+    el.querySelectorAll(".tz-mcell[data-day], .tz-wcell[data-day]").forEach((c) =>
       c.addEventListener("click", () => {
         setAnchor(c.getAttribute("data-day"));
         cal.view = "day";
@@ -2624,7 +2712,7 @@ export default async function activate(cl) {
       renderCalendar(calEl);
       return true;
     }
-    const views = { d: "day", m: "month", r: "year" };
+    const views = { d: "day", w: "week", m: "month", r: "year" };
     if (views[e.key]) {
       cal.view = views[e.key];
       renderCalendar(calEl);

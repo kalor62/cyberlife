@@ -734,6 +734,7 @@ export namespace main {
 	    primary?: boolean;
 	    readOnly?: boolean;
 	    shared: boolean;
+	    color?: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new CalendarInfo(source);
@@ -746,6 +747,7 @@ export namespace main {
 	        this.primary = source["primary"];
 	        this.readOnly = source["readOnly"];
 	        this.shared = source["shared"];
+	        this.color = source["color"];
 	    }
 	}
 	export class CalendarAccountInfo {

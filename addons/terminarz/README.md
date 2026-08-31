@@ -19,6 +19,12 @@ przepadło.
   siatka bieżącego miesiąca z kropkami przy dniach z terminami). Każdy klikalny:
   prowadzi do modułu, a z mini siatki wprost na wybrany dzień w kalendarzu.
 
+## Widoki kalendarza
+
+Dzień (`d`), Tydzień (`w`), Miesiąc (`m`), Rok (`r`); `[` i `]` przesuwają
+okres, `t` wraca na dzisiaj. Tydzień to siedem kolumn pon–niedz z pełną listą
+pozycji dnia — klik w kolumnę otwiera widok dnia.
+
 ## Statusy terminu
 
 | Status | Kiedy |
@@ -118,7 +124,11 @@ przynajmniej jeden kalendarz, na stronie Kalendarz pojawiają się dwa przyciski
 - **+ Wydarzenie** — dodaje zwykłe wydarzenie do wybranego kalendarza Google
   (cały dzień albo z godzinami). Nie jest to zobowiązanie: nie ma cyklu,
   kwoty ani potwierdzania płatności. Po zapisie widok odświeża się sam,
-  a filtr „Pokaż eventy Google" włącza się, jeśli był wyłączony.
+  a kalendarz docelowy zostaje odznaczony jako widoczny, jeśli był ukryty.
+
+Pod paskiem jest po jednym checkboksie na udostępniony kalendarz — odznaczenie
+chowa jego wydarzenia we wszystkich widokach i na widgetach. Kolor kwadracika
+to kolor kalendarza z Google; wydarzenie z własnym kolorem dostaje swój.
 
 Wydarzenia spoza Terminarza pozostają w widokach tylko do odczytu — edytuje
 się je w Google.
