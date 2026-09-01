@@ -11,6 +11,24 @@ import (
 // ClaudeRunnerID is the built-in default runner
 const ClaudeRunnerID = "claude"
 
+// ShellRunnerID runs the prompt itself as a `sh -c` script. It is for API
+// callers (addons, automations) that need full control of the command line,
+// so it is resolvable by id but never listed: in the UI pickers it would only
+// ever launch `sh -c` with no script.
+const ShellRunnerID = "shell"
+
+func builtinShellRunner() Runner {
+	return Runner{
+		ID:      ShellRunnerID,
+		Name:    "Shell script",
+		Command: "sh",
+		Args:    "-c",
+		Icon:    "🐚",
+		Color:   "#94a3b8",
+		BuiltIn: true,
+	}
+}
+
 func builtinClaudeRunner() Runner {
 	return Runner{
 		ID:      ClaudeRunnerID,
@@ -33,6 +51,9 @@ func (m *Manager) GetRunners() []Runner {
 
 // GetRunner resolves a runner by ID; empty or unknown falls back to Claude
 func (m *Manager) GetRunner(id string) Runner {
+	if id == ShellRunnerID {
+		return builtinShellRunner()
+	}
 	for _, r := range m.GetRunners() {
 		if r.ID == id {
 			return r

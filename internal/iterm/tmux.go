@@ -137,12 +137,14 @@ func KillSession(name string) error {
 }
 
 // CaptureSessionText returns the last `lines` of a session as plain text
-// (screen + scrollback, no styling — meant for agents reading output)
+// (screen + scrollback, no styling — meant for agents reading output). -J
+// re-joins lines the pane wrapped at its width, so a reader gets the logical
+// lines the program printed rather than a break in the middle of a word.
 func CaptureSessionText(name string, lines int) (string, error) {
 	if lines <= 0 {
 		lines = 200
 	}
-	out, err := tmuxExec("capture-pane", "-p", "-t", tmuxPaneTarget(name), "-S", fmt.Sprintf("-%d", lines))
+	out, err := tmuxExec("capture-pane", "-p", "-J", "-t", tmuxPaneTarget(name), "-S", fmt.Sprintf("-%d", lines))
 	if err != nil {
 		return "", err
 	}

@@ -24,7 +24,9 @@ API and installs skills that teach every agent how to use it.
 2. **tmux is the only session mode.** Never reintroduce AppleScript
    polling, the removed Python bridge, or non-tmux launch paths.
 3. **No model names in code.** Model CLIs are user-defined Runners
-   (`internal/state/runners.go`); Claude is the only built-in.
+   (`internal/state/runners.go`); Claude is the only listed built-in. The
+   hidden `shell` runner (`sh -c <prompt>`) exists for API callers that
+   need the full command line — addons, automations — never for pickers.
 4. **Keyboard first.** Every new surface needs keys (j/k lists, verbs,
    Esc closes layers) registered in `shortcuts-data.js`.
 5. **Forms use `fc-*` components, Help content uses `hc-*` components.**

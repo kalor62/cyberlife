@@ -2,37 +2,86 @@
   "id": "cyber-bot",
   "name": "Cyber Bot",
   "icon": "🤖",
-  "version": "0.1.0",
-  "description": "Grok-style chat bot for Cyber Life. Talks through a Cyber Life agent session (no external API key), is aware of your active project / board / notes, and can be summoned by other agents via the cyber-bot_ask tool.",
+  "version": "0.2.0",
+  "description": "Grok-style chat bot for Cyber Life. Runs on the Claude Code CLI (no extra API key), remembers each thread (--session-id/--resume), uses Cyber Life MCP tools (board, notes, terminarz, KSeF, nitroarena) instead of guessing, and keeps long-term memory in its own CLAUDE.md. Other agents can summon it via cyber-bot_ask.",
   "author": "Cyber Life contributors",
   "category": "productivity",
-  "tags": ["ai", "chat", "assistant", "grok", "agent"],
+  "tags": [
+    "ai",
+    "chat",
+    "assistant",
+    "grok",
+    "agent",
+    "memory",
+    "tools"
+  ],
   "entry": "main.js",
-  "permissions": ["term", "system", "projects", "board", "notes"],
+  "permissions": [
+    "term",
+    "system",
+    "projects",
+    "board",
+    "notes"
+  ],
   "modules": [
     {
       "id": "cyber-bot.chat",
       "label": "Cyber Bot",
       "icon": "🤖",
       "pages": [
-        { "id": "chat", "label": "Czat", "icon": "💬" },
-        { "id": "history", "label": "Historia", "icon": "🕑" }
+        {
+          "id": "chat",
+          "label": "Czat",
+          "icon": "💬"
+        },
+        {
+          "id": "history",
+          "label": "Historia",
+          "icon": "🕑"
+        }
       ]
     }
   ],
   "widgets": [
-    { "id": "cyber-bot.ask", "title": "Zapytaj Cyber Bota", "icon": "🤖", "description": "Szybkie pytanie do Cyber Bota", "dashboard": true }
+    {
+      "id": "cyber-bot.ask",
+      "title": "Zapytaj Cyber Bota",
+      "icon": "🤖",
+      "description": "Szybkie pytanie do Cyber Bota",
+      "dashboard": true
+    }
   ],
   "agentTools": [
     {
       "name": "ask",
-      "description": "Zapytaj Cyber Bota — agenta CyberLife świadomego Twojego aktywnego projektu, boardu i notatek. Zwraca odpowiedź tekstową (markdown). Bot obsługuje jedno pytanie naraz (single-flight): jeśli jest zajęty inną odpowiedzią, rzuca błąd o zajętości — ponów po chwili.",
+      "description": "Zapytaj Cyber Bota — agenta CyberLife z dostępem do narzędzi MCP aplikacji (projekty, board, notatki, terminarz, KSeF, nitroarena) i własną pamięcią. Każde wywołanie to osobna, jednorazowa rozmowa. Zwraca odpowiedź tekstową (markdown). Single-flight: jeśli bot jest zajęty, rzuca błąd o zajętości — ponów po chwili.",
       "schema": {
         "type": "object",
         "properties": {
-          "message": { "type": "string", "description": "Pytanie lub polecenie do bota" }
+          "message": {
+            "type": "string",
+            "description": "Pytanie lub polecenie do bota"
+          }
         },
-        "required": ["message"]
+        "required": [
+          "message"
+        ]
+      }
+    },
+    {
+      "name": "remember",
+      "description": "Dopisz jedną zwięzłą notatkę do trwałej pamięci Cyber Bota (CLAUDE.md bota). Używaj dla trwałych faktów i preferencji użytkownika, nie dla rzeczy jednorazowych. Max 500 znaków.",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "note": {
+            "type": "string",
+            "description": "Treść notatki (jedno zdanie / jeden fakt)"
+          }
+        },
+        "required": [
+          "note"
+        ]
       }
     }
   ]

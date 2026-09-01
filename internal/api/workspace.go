@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/kalor62/cyberlife/internal/agentskills"
+	"github.com/kalor62/cyberlife/internal/paths"
 	"github.com/kalor62/cyberlife/internal/state"
 )
 
@@ -384,6 +385,9 @@ func (s *Server) opSystemInfo() (any, error) {
 	}
 	if s.dependencies != nil {
 		info["dependencies"] = s.dependencies()
+	}
+	if root, err := paths.AddonData(); err == nil {
+		info["addonData"] = root
 	}
 	return info, nil
 }
