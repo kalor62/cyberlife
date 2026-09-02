@@ -7,6 +7,7 @@ import * as bus from './bus.js';
 import { registerAddonWidget, removeAddonWidgets, rerenderSidebarWidgets } from './widgets.js';
 import { registerAddonModule, unregisterAddonModules, switchToModuleId, switchAddonPage } from './module-host.js';
 import { registerAddonSettingsSection, removeAddonSettingsSections, refreshSettingsIfOpen } from './settings-dashboard.js';
+import { registerTermMenuItem, removeAddonTermMenuItems } from './term-menu-registry.js';
 import { setBuiltinStates } from './addon-state.js';
 import { renderModuleBar, getModules, getVisibleModules } from './shell.js';
 import { AddonsList, AddonStorageAll, AddonStorageSet, AddonStorageDelete, AddonSendEmail, GetGmailConfig } from '../../wailsjs/go/main/App.js';
@@ -141,6 +142,7 @@ function deactivate(id) {
   removeAddonWidgets(id);
   unregisterAddonModules(id);
   removeAddonSettingsSections(id);
+  removeAddonTermMenuItems(id);
   active.delete(id);
 }
 
@@ -217,6 +219,13 @@ function makeContext(addon, inst) {
         }
       }
       registerAddonModule(addon.id, { ...desc, id: namespaced(desc.id) });
+    },
+
+    // Entry in the Term menu (⌘M) under an "Addons" section. run(ctx) gets
+    // { session, project, lastPrompt } for the session being viewed.
+    registerTermMenuItem(desc) {
+      const off = registerTermMenuItem(addon.id, desc);
+      inst.cleanups.push(off);
     },
 
     openModule(id, pageId) {

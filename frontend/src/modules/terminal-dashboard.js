@@ -1306,6 +1306,9 @@ window.itermTypeText = function(text) {
   flushTypeBuffer();
 };
 
+window.itermViewingSession = function() {
+  return dashboardState.viewingSessionId || null;
+};
 window.itermIsViewingSession = function() {
   return !!dashboardState.viewingSessionId;
 };
@@ -1473,6 +1476,7 @@ function noteLastUsedPrompt(p) {
   if (isDashboardVisible()) renderTerminalDashboard();
 }
 window.termNoteLastPrompt = noteLastUsedPrompt;
+window.termGetLastPrompt = getLastUsedPrompt;
 
 window.itermSendLastPrompt = async function() {
   const last = getLastUsedPrompt();

@@ -141,6 +141,9 @@ live (`kanban-changed`, `automations-changed`, `widgets-changed`, …).
      without it the call rejects and the addon keeps running
    - `cl.openModule(id, pageId?)` — switch the app to one of the addon's
      modules, optionally straight to one of its pages
+   - `cl.registerTermMenuItem({id, label, hint?, run(ctx)})` — an entry in
+     the Term menu (⌘M) under "Addons"; `ctx` = `{session, project,
+     lastPrompt}` of the session being viewed (session may be null)
    - `cl.pdfText(dataBase64)` — layout-preserving text of a PDF via the
      app's pdftotext bridge (needs poppler installed; ≤15MB)
    - `cl.mergePdfs(keys, outPath, {open})` — concatenate stored PDFs

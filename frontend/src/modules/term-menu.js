@@ -4,6 +4,7 @@
 
 import { escapeHtml } from './utils.js';
 import { state } from './state.js';
+import { listTermMenuItems } from './term-menu-registry.js';
 import { GetProjectPrompts, GetGlobalPrompts, IncrementPromptUsage, GetVoiceLang, GetVoiceAutoSubmit, GetTranscriptionEngine, GetElevenLabsAPIKey } from '../../wailsjs/go/main/App.js';
 
 let menuState = null; // null = closed; { cursor, items }
@@ -94,6 +95,23 @@ function buildItems(data) {
   });
 
   const hasSession = window.itermIsViewingSession?.();
+  listTermMenuItems().forEach((it, i) => {
+    items.push({
+      section: i === 0 ? 'Addons' : null,
+      label: it.label,
+      hint: it.hint,
+      run: () => {
+        closeTermMenu();
+        const ctx = {
+          session: window.itermViewingSession?.() || null,
+          project: state.activeProject || null,
+          lastPrompt: window.termGetLastPrompt?.() || null,
+        };
+        Promise.resolve(it.run(ctx)).catch((err) => console.warn(`term menu item ${it.addonId}:${it.id} failed:`, err));
+      },
+    });
+  });
+
   data.prompts.forEach((p, i) => {
     items.push({
       section: i === 0 ? 'Prompts' : null,
