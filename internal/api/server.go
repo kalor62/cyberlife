@@ -44,7 +44,8 @@ type Hooks struct {
 	EmitPayload    func(event string, payload any)
 	WebhookFire    func(slug string, body []byte) int
 	OnAddonsChange func()
-	Notify         func(title, message string) error
+	Notify         func(source, title, message, link string) error
+	Notifications  func(includeArchived bool, limit int) any
 	Calendar       CalendarHooks
 }
 
@@ -67,7 +68,8 @@ type Server struct {
 	emitPayload     func(event string, payload any)
 	webhookFire     func(slug string, body []byte) int
 	onAddonsChange  func()
-	systemNotify    func(title, message string) error
+	systemNotify    func(source, title, message, link string) error
+	notifications   func(includeArchived bool, limit int) any
 	calendar        CalendarHooks
 	http            *http.Server
 
@@ -99,6 +101,7 @@ func NewServer(manager *state.Manager, hooks Hooks) *Server {
 		webhookFire:     hooks.WebhookFire,
 		onAddonsChange:  hooks.OnAddonsChange,
 		systemNotify:    hooks.Notify,
+		notifications:   hooks.Notifications,
 		calendar:        hooks.Calendar,
 	}
 }

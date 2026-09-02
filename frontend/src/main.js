@@ -100,6 +100,7 @@ import {
 // Keyboard shortcuts module
 import { initKeyboardShortcuts } from './modules/keyboard-shortcuts.js';
 import { initShell } from './modules/shell.js';
+import { initNotifications } from './modules/notifications.js';
 import { initProjectsModule } from './modules/projects-module.js';
 import { initTasks } from './modules/tasks.js';
 
@@ -269,6 +270,7 @@ async function init() {
 
   // Initialize shell (module bar, status bar, keyboard modes) and shortcuts
   initShell();
+  initNotifications();
   initKeyboardShortcuts();
   initProjectsModule();
 

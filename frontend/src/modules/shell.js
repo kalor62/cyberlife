@@ -4,6 +4,7 @@
 // NORMAL / INSERT / TERM mode indicator.
 
 import { escapeHtml } from './utils.js';
+import { bellHtml, wireBell } from './notifications.js';
 import { state } from './state.js';
 import { GetModuleOrder, SetModuleOrder, GetHiddenModules, SetHiddenModules, GetAppVersion } from '../../wailsjs/go/main/App.js';
 
@@ -335,7 +336,9 @@ export function renderStatusBar() {
     ${mod ? `<span class="shell-status-item">${mod.icon} ${mod.label}</span>` : ''}
     <span class="shell-status-spacer"></span>
     <span class="shell-status-hint">${MODE_HINTS[mode] || ''}</span>
+    ${bellHtml()}
   `;
+  wireBell();
 }
 
 

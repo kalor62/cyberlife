@@ -136,9 +136,11 @@ live (`kanban-changed`, `automations-changed`, `widgets-changed`, …).
    - `cl.registerAgentTool(name, async handler(args))` — implements a
      manifest `agentTools` entry; the returned value becomes the MCP
      tool result (throw to report an error)
-   - `cl.notify(title, message)` — system notification (the one
-     automations raise). Needs the `notify` permission in the manifest;
-     without it the call rejects and the addon keeps running
+   - `cl.notify(title, message, {link?})` — raises a notification: an
+     entry in the notification center (bell in the status bar, ⌘N) plus
+     the desktop toast automations use; `source` is the addon id. Needs
+     the `notify` permission in the manifest; without it the call rejects
+     and the addon keeps running
    - `cl.openModule(id, pageId?)` — switch the app to one of the addon's
      modules, optionally straight to one of its pages
    - `cl.registerTermMenuItem({id, label, hint?, run(ctx)})` — an entry in

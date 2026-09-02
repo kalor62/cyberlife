@@ -435,12 +435,18 @@ description: Read-only Cyber Life overview — configured runners (ids for launc
 
 # Cyber Life System
 
-One tool: system_info. Returns app metadata, the active project,
-runner ids (for term_create and automation run-agent actions — env
-values are hidden, only key names are listed), dependency checks
-(tmux, claude, iTerm2, node) and which agent skills are enabled.
+Tools:
+- system_info — app metadata, the active project, runner ids (for
+  term_create and automation run-agent actions — env values are hidden,
+  only key names are listed), dependency checks (tmux, claude, iTerm2,
+  node) and which agent skills are enabled.
+- system_notify {title, message?, source?, link?} — raise a notification: it
+  lands in the notification center (bell in the status bar) and as a
+  desktop toast. Use it for anything the user must see even when not
+  watching your session. Rate limited to 12/min.
+- system_notifications {includeArchived?, limit?} — read the center.
 
-REST fallback (base %s): GET /api/system.
+REST fallback (base %s): GET /api/system, POST /api/notify.
 
 ## First contact — onboarding a new user
 

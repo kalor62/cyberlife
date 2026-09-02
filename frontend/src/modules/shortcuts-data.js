@@ -11,6 +11,7 @@ export const SHORTCUT_SECTIONS = [
       { keys: ['a'], desc: 'TERM — attach, keys go to the session' },
       { keys: ['⌃', 'U'], desc: 'Detach from the session' },
       { keys: ['⌘', 'M'], desc: 'Terminal menu — voice, prompts, settings' },
+      { keys: ['⌘', 'N'], desc: 'Notifications — j/k, r read, a archive, d delete' },
       { keys: ['Esc'], desc: 'Close layer / interrupt Claude' },
     ],
   },

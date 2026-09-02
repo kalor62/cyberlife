@@ -154,7 +154,10 @@ func (a *App) startup(ctx context.Context) {
 				a.syncAgentSkills()
 				runtime.EventsEmit(a.ctx, "addons-changed", nil)
 			},
-			Notify:   a.automationNotify,
+			Notify: a.raiseNotification,
+			Notifications: func(includeArchived bool, limit int) any {
+				return a.stateManager.GetNotifications(includeArchived, limit)
+			},
 			Calendar: a.calendarHooks(),
 		})
 		a.apiServer.Start()

@@ -8,7 +8,6 @@ import (
 	"github.com/kalor62/cyberlife/internal/gmail"
 	"github.com/kalor62/cyberlife/internal/iterm"
 	"github.com/kalor62/cyberlife/internal/logging"
-	"github.com/kalor62/cyberlife/internal/platform"
 	"github.com/kalor62/cyberlife/internal/state"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
@@ -46,13 +45,6 @@ func (a *App) automationComment(projectID, taskID, author, text string) error {
 		return err
 	}
 	runtime.EventsEmit(a.ctx, "kanban-changed", projectID)
-	return nil
-}
-
-func (a *App) automationNotify(title, message string) error {
-	if err := platform.Notify(title, message); err != nil {
-		return fmt.Errorf("notification failed: %w", err)
-	}
 	return nil
 }
 

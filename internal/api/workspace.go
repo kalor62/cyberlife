@@ -527,6 +527,24 @@ func (s *Server) systemTools() []mcpTool {
 			Description: "App overview: active project, runners (ids for term_create/automations; env values hidden), defaultRunner, skill permission states, dependency health, API endpoints",
 			InputSchema: objSchema(nil, map[string]any{}),
 		},
+		{
+			Name:        "system_notify",
+			Description: "Raise a notification for the user: lands in the Cyber Life notification center (bell) and as a desktop toast. Use for things the user must see even when not watching this session (rate limited: 12/min).",
+			InputSchema: objSchema([]string{"title"}, map[string]any{
+				"title":   map[string]any{"type": "string", "description": "Short headline (max 120 chars)"},
+				"message": map[string]any{"type": "string", "description": "Details (max 500 chars)"},
+				"source":  map[string]any{"type": "string", "description": "Who raises it, e.g. agent or addon name (default: agent)"},
+				"link":    map[string]any{"type": "string", "description": "Optional URL the entry opens"},
+			}),
+		},
+		{
+			Name:        "system_notifications",
+			Description: "Read the notification center (newest first). unread entries have no readAt.",
+			InputSchema: objSchema(nil, map[string]any{
+				"includeArchived": map[string]any{"type": "boolean"},
+				"limit":           map[string]any{"type": "integer", "description": "Default 50"},
+			}),
+		},
 	}
 }
 
@@ -568,6 +586,10 @@ func (s *Server) callWorkspaceTool(name string, args json.RawMessage) (any, erro
 		return s.opPromptsDelete(req)
 	case "system_info":
 		return s.opSystemInfo()
+	case "system_notify":
+		return s.opNotify(args)
+	case "system_notifications":
+		return s.opNotificationsList(args)
 	}
 	return nil, fmt.Errorf("unknown tool %q", name)
 }

@@ -411,9 +411,10 @@ function makeContext(addon, inst) {
       return res.json();
     },
 
-    // System notification. Unlike api() this is not an API group, so the
-    // manifest permission is checked here rather than derived from a path.
-    async notify(title, message) {
+    // Notification: lands in the notification center (bell) and as a desktop
+    // toast. Unlike api() this is not an API group, so the manifest permission
+    // is checked here rather than derived from a path.
+    async notify(title, message, { link = '' } = {}) {
       if (!(addon.permissions || []).includes('notify')) {
         throw new Error('notify(): addon.json does not declare the "notify" permission');
       }
@@ -421,7 +422,7 @@ function makeContext(addon, inst) {
       const res = await fetch(`${API_BASE}/api/notify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: String(title), message: String(message ?? '') }),
+        body: JSON.stringify({ title: String(title), message: String(message ?? ''), source: addon.id, link: String(link || '') }),
       });
       if (!res.ok) throw new Error(`notify(): ${res.status} ${await res.text()}`);
       return res.json();

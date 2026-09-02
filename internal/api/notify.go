@@ -1,10 +1,11 @@
-// System notifications raised by addons through cl.notify(). The manifest
-// "notify" permission is enforced in the addon host, which is the only caller;
-// this endpoint just validates the payload and forwards it to the platform
-// notifier used by automations.
+// Notifications raised by addons through cl.notify() and by agents through
+// the notify tool: each one lands in the in-app notification center and as a
+// desktop toast. The manifest "notify" permission is enforced in the addon
+// host; this endpoint validates the payload and rate-limits.
 package api
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -24,7 +25,11 @@ const (
 type notifyRequest struct {
 	Title   string `json:"title"`
 	Message string `json:"message"`
+	Source  string `json:"source,omitempty"`
+	Link    string `json:"link,omitempty"`
 }
+
+const maxNotifyLinkLen = 500
 
 var notifyRate struct {
 	sync.Mutex
@@ -70,11 +75,24 @@ func (s *Server) handleNotify(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusTooManyRequests, fmt.Errorf("notification rate limit: max %d per minute", notifyBurst))
 		return
 	}
-	if err := s.systemNotify(trunc(title, maxNotifyTitleLen), trunc(strings.TrimSpace(req.Message), maxNotifyMessageLen)); err != nil {
+	if err := s.raiseNotification(req); err != nil {
 		writeErr(w, http.StatusInternalServerError, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
+}
+
+func (s *Server) raiseNotification(req notifyRequest) error {
+	source := strings.TrimSpace(req.Source)
+	if source == "" {
+		source = "agent"
+	}
+	return s.systemNotify(
+		trunc(source, 60),
+		trunc(strings.TrimSpace(req.Title), maxNotifyTitleLen),
+		trunc(strings.TrimSpace(req.Message), maxNotifyMessageLen),
+		trunc(strings.TrimSpace(req.Link), maxNotifyLinkLen),
+	)
 }
 
 func trunc(s string, max int) string {
@@ -83,4 +101,45 @@ func trunc(s string, max int) string {
 		return s
 	}
 	return string(runes[:max-1]) + "…"
+}
+
+func (s *Server) opNotify(args json.RawMessage) (any, error) {
+	var req notifyRequest
+	if len(args) > 0 {
+		if err := json.Unmarshal(args, &req); err != nil {
+			return nil, fmt.Errorf("invalid arguments: %w", err)
+		}
+	}
+	if strings.TrimSpace(req.Title) == "" {
+		return nil, fmt.Errorf("title is required")
+	}
+	if s.systemNotify == nil {
+		return nil, fmt.Errorf("notifications are unavailable")
+	}
+	if !notifyAllowed(time.Now()) {
+		return nil, fmt.Errorf("notification rate limit: max %d per minute", notifyBurst)
+	}
+	if err := s.raiseNotification(req); err != nil {
+		return nil, err
+	}
+	return map[string]bool{"ok": true}, nil
+}
+
+func (s *Server) opNotificationsList(args json.RawMessage) (any, error) {
+	var req struct {
+		IncludeArchived bool `json:"includeArchived"`
+		Limit           int  `json:"limit"`
+	}
+	if len(args) > 0 {
+		if err := json.Unmarshal(args, &req); err != nil {
+			return nil, fmt.Errorf("invalid arguments: %w", err)
+		}
+	}
+	if s.notifications == nil {
+		return nil, fmt.Errorf("notifications are unavailable")
+	}
+	if req.Limit <= 0 {
+		req.Limit = 50
+	}
+	return map[string]any{"notifications": s.notifications(req.IncludeArchived, req.Limit)}, nil
 }

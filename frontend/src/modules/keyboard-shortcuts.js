@@ -10,6 +10,7 @@ import { togglePomodoro } from './pomodoro.js';
 import { toggleWidgetSidebar } from './widgets.js';
 import { openCommandPalette, closeCommandPalette, isCommandPaletteOpen } from './command-palette.js';
 import { isTermMenuOpen, toggleTermMenu, handleTermMenuKey } from './term-menu.js';
+import { isNotificationsOpen, toggleNotifications, handleNotificationsKey } from './notifications.js';
 
 // g-chord: `g` followed by a module mnemonic within the window
 const G_CHORD_TARGETS = {
@@ -75,6 +76,10 @@ function handleKeydown(e) {
     handleTermMenuKey(e);
     return;
   }
+  if (isNotificationsOpen()) {
+    handleNotificationsKey(e);
+    return;
+  }
   if (isProjectSwitcherOpen()) {
     handleProjectSwitcherKey(e);
     return;
@@ -132,6 +137,11 @@ function handleCmdShortcuts(e) {
   if (!e.shiftKey && key === 'm') {
     e.preventDefault();
     toggleTermMenu();
+    return true;
+  }
+  if (!e.shiftKey && key === 'n') {
+    e.preventDefault();
+    toggleNotifications();
     return true;
   }
   // ⌘V outside INSERT has no focused field to paste into — route the

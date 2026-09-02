@@ -159,6 +159,8 @@ type AppState struct {
 	Automations []AutomationRule `json:"automations,omitempty"`
 	// Recent automation executions (newest first, capped)
 	AutomationRuns []AutomationRun `json:"automationRuns,omitempty"`
+	// In-app notification center entries (newest first, capped)
+	Notifications []Notification `json:"notifications,omitempty"`
 	// Right-sidebar widget area configuration
 	Widgets *WidgetSettings `json:"widgets,omitempty"`
 	// User-chosen module tab order (module ids); empty = default order
