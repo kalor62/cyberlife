@@ -30,6 +30,10 @@ export function AddonsReload() {
   return window['go']['main']['App']['AddonsReload']();
 }
 
+export function ArchiveNotification(arg1) {
+  return window['go']['main']['App']['ArchiveNotification'](arg1);
+}
+
 export function CalendarConnect(arg1, arg2) {
   return window['go']['main']['App']['CalendarConnect'](arg1, arg2);
 }
@@ -120,6 +124,10 @@ export function DeleteKanbanColumn(arg1, arg2) {
 
 export function DeleteKanbanTask(arg1, arg2) {
   return window['go']['main']['App']['DeleteKanbanTask'](arg1, arg2);
+}
+
+export function DeleteNotification(arg1) {
+  return window['go']['main']['App']['DeleteNotification'](arg1);
 }
 
 export function DeleteProject(arg1) {
@@ -298,6 +306,10 @@ export function GetNotes(arg1) {
   return window['go']['main']['App']['GetNotes'](arg1);
 }
 
+export function GetNotifications(arg1) {
+  return window['go']['main']['App']['GetNotifications'](arg1);
+}
+
 export function GetPinnedTerminals() {
   return window['go']['main']['App']['GetPinnedTerminals']();
 }
@@ -376,6 +388,10 @@ export function GetTerminalTheme() {
 
 export function GetTranscriptionEngine() {
   return window['go']['main']['App']['GetTranscriptionEngine']();
+}
+
+export function GetUnreadNotificationCount() {
+  return window['go']['main']['App']['GetUnreadNotificationCount']();
 }
 
 export function GetVoiceAutoSubmit() {
@@ -516,6 +532,10 @@ export function ListProjectRepos(arg1) {
 
 export function Log(arg1, arg2, arg3, arg4) {
   return window['go']['main']['App']['Log'](arg1, arg2, arg3, arg4);
+}
+
+export function MarkNotificationRead(arg1) {
+  return window['go']['main']['App']['MarkNotificationRead'](arg1);
 }
 
 export function MoveKanbanTask(arg1, arg2, arg3, arg4) {

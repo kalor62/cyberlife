@@ -998,6 +998,53 @@ export namespace state {
 	        this.moduleWidths = source["moduleWidths"];
 	    }
 	}
+	export class Notification {
+	    id: string;
+	    title: string;
+	    message?: string;
+	    source?: string;
+	    link?: string;
+	    // Go type: time
+	    createdAt: any;
+	    // Go type: time
+	    readAt?: any;
+	    // Go type: time
+	    archivedAt?: any;
+	
+	    static createFrom(source: any = {}) {
+	        return new Notification(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.title = source["title"];
+	        this.message = source["message"];
+	        this.source = source["source"];
+	        this.link = source["link"];
+	        this.createdAt = this.convertValues(source["createdAt"], null);
+	        this.readAt = this.convertValues(source["readAt"], null);
+	        this.archivedAt = this.convertValues(source["archivedAt"], null);
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
 	export class AutomationRun {
 	    id: string;
 	    ruleId: string;
@@ -1771,6 +1818,7 @@ export namespace state {
 	    customHealthChecks?: CustomHealthCheck[];
 	    automations?: AutomationRule[];
 	    automationRuns?: AutomationRun[];
+	    notifications?: Notification[];
 	    widgets?: WidgetSettings;
 	    moduleOrder?: string[];
 	    hiddenModules?: string[];
@@ -1817,6 +1865,7 @@ export namespace state {
 	        this.customHealthChecks = this.convertValues(source["customHealthChecks"], CustomHealthCheck);
 	        this.automations = this.convertValues(source["automations"], AutomationRule);
 	        this.automationRuns = this.convertValues(source["automationRuns"], AutomationRun);
+	        this.notifications = this.convertValues(source["notifications"], Notification);
 	        this.widgets = this.convertValues(source["widgets"], WidgetSettings);
 	        this.moduleOrder = source["moduleOrder"];
 	        this.hiddenModules = source["hiddenModules"];
@@ -1844,6 +1893,7 @@ export namespace state {
 		    return a;
 		}
 	}
+	
 	
 	
 	

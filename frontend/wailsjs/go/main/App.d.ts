@@ -23,6 +23,8 @@ export function AddonsList():Promise<main.AddonsInfo>;
 
 export function AddonsReload():Promise<main.AddonsInfo>;
 
+export function ArchiveNotification(arg1:string):Promise<void>;
+
 export function CalendarConnect(arg1:string,arg2:string):Promise<string>;
 
 export function CalendarDisconnect(arg1:string):Promise<void>;
@@ -68,6 +70,8 @@ export function DeleteGlobalPrompt(arg1:string):Promise<void>;
 export function DeleteKanbanColumn(arg1:string,arg2:string):Promise<void>;
 
 export function DeleteKanbanTask(arg1:string,arg2:string):Promise<void>;
+
+export function DeleteNotification(arg1:string):Promise<void>;
 
 export function DeleteProject(arg1:string):Promise<void>;
 
@@ -157,6 +161,8 @@ export function GetModuleOrder():Promise<Array<string>>;
 
 export function GetNotes(arg1:string):Promise<string>;
 
+export function GetNotifications(arg1:boolean):Promise<Array<state.Notification>>;
+
 export function GetPinnedTerminals():Promise<Record<string, string>>;
 
 export function GetPomodoroSettings():Promise<state.PomodoroSettings>;
@@ -196,6 +202,8 @@ export function GetTerminalRunners():Promise<Record<string, string>>;
 export function GetTerminalTheme():Promise<string>;
 
 export function GetTranscriptionEngine():Promise<string>;
+
+export function GetUnreadNotificationCount():Promise<number>;
 
 export function GetVoiceAutoSubmit():Promise<boolean>;
 
@@ -266,6 +274,8 @@ export function LaunchITerm():Promise<void>;
 export function ListProjectRepos(arg1:string):Promise<Array<main.ProjectRepo>>;
 
 export function Log(arg1:string,arg2:string,arg3:string,arg4:Record<string, any>):Promise<void>;
+
+export function MarkNotificationRead(arg1:string):Promise<void>;
 
 export function MoveKanbanTask(arg1:string,arg2:string,arg3:string,arg4:number):Promise<void>;
 
