@@ -2,7 +2,7 @@
   "id": "cyber-bot",
   "name": "Cyber Bot",
   "icon": "🤖",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Grok-style chat bot for Cyber Life. Runs on the Claude Code CLI (no extra API key), remembers each thread (--session-id/--resume), uses Cyber Life MCP tools (board, notes, terminarz, KSeF, nitroarena) instead of guessing, and keeps long-term memory in its own CLAUDE.md. Other agents can summon it via cyber-bot_ask.",
   "author": "Cyber Life contributors",
   "category": "productivity",
@@ -17,11 +17,12 @@
   ],
   "entry": "main.js",
   "permissions": [
-    "term",
-    "system",
-    "projects",
     "board",
-    "notes"
+    "notes",
+    "notify",
+    "projects",
+    "system",
+    "term"
   ],
   "modules": [
     {
@@ -38,6 +39,11 @@
           "id": "history",
           "label": "Historia",
           "icon": "🕑"
+        },
+        {
+          "id": "mail",
+          "label": "Maile",
+          "icon": "📧"
         }
       ]
     }
@@ -81,6 +87,98 @@
         },
         "required": [
           "note"
+        ]
+      }
+    },
+    {
+      "name": "mail_rules",
+      "description": "Zasady obsługi maili Cyber Bota (per skrzynka; account=* dotyczy wszystkich). Zwraca listę {id, account, from, subject, action, instructions}.",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "account": {
+            "type": "string",
+            "description": "Adres skrzynki; pusty = wszystkie zasady"
+          }
+        }
+      }
+    },
+    {
+      "name": "mail_rule_save",
+      "description": "Zapisz zasadę obsługi maili: dopasowanie po fragmencie nadawcy (from) i/lub tematu (subject), akcja trash | archive | markRead | notify | agent (agent wymaga instructions). account = adres skrzynki, której dotyczy, albo *.",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "account": {
+            "type": "string"
+          },
+          "from": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "trash",
+              "archive",
+              "markRead",
+              "notify",
+              "agent"
+            ]
+          },
+          "instructions": {
+            "type": "string",
+            "description": "Co bot ma zrobić z takim mailem (dla action=agent)"
+          },
+          "note": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "account",
+          "action"
+        ]
+      }
+    },
+    {
+      "name": "mail_log",
+      "description": "Wpis do audytu maili: co zrobiono z danym mailem. body = treść maila (max 4000 znaków), zostaje do podglądu nawet po usunięciu maila.",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "account": {
+            "type": "string"
+          },
+          "msgId": {
+            "type": "string"
+          },
+          "from": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string",
+            "description": "trash | archive | markRead | notify | agent:<decyzja> | dry:<akcja>"
+          },
+          "ruleId": {
+            "type": "string"
+          },
+          "result": {
+            "type": "string",
+            "description": "Krótko: dlaczego / co się stało"
+          },
+          "body": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "account",
+          "subject",
+          "action"
         ]
       }
     }

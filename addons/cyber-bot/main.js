@@ -8,8 +8,10 @@
 // — no shell, no file tools — and its long-term memory is a CLAUDE.md the bot
 // itself appends to through the cyber-bot_remember tool.
 //
-// Single-file on purpose: hot reload (`addons_reload`) only re-imports the
-// ENTRY, so keeping everything here means every edit reloads cleanly.
+// Hot reload (`addons_reload`) re-imports only this entry; after editing
+// mail.js restart the app to clear the import cache.
+
+import { createMail, MAIL_TOOLS, GMAIL_READ_TOOLS, GMAIL_WRITE_TOOLS } from "./mail.js";
 
 export default async function activate(cl) {
   const STYLE_ID = "cyber-bot-style";
@@ -32,6 +34,7 @@ export default async function activate(cl) {
   // outside this list is refused (no human to approve in print mode).
   const READ_TOOLS = [
     "system_info",
+    "system_notify",
     "board_list_projects",
     "board_get",
     "notes_get",
@@ -65,7 +68,7 @@ export default async function activate(cl) {
     "tasks_create",
     "prompts_save",
   ];
-  const mcpName = (t) => "mcp__cyberlife__" + t;
+  const mcpName = (t) => (t.startsWith("gmail_") ? "mcp__gmail__" : "mcp__cyberlife__") + t;
 
   // ---------------------------------------------------------------- persona
   const PRESETS = {
@@ -302,6 +305,33 @@ export default async function activate(cl) {
       .cb-histrow .cb-open{cursor:pointer;flex:1;min-width:0;}
       .cb-ask-w{display:flex;flex-direction:column;gap:6px;}
       .cb-ask-w input{background:var(--bg-secondary,#181825);color:var(--text-primary,#cdd6f4);border:1px solid var(--border,#45475a);border-radius:8px;padding:7px 9px;font:inherit;}
+      .cb-mail{padding:12px;display:flex;flex-direction:column;gap:10px;overflow-y:auto;height:100%;}
+      .cb-mail-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+      .cb-mail-bar select,.cb-mail-form select,.cb-mail-form input,.cb-mail-check input[type=number]{background:var(--bg-secondary,#181825);color:var(--text-primary,#cdd6f4);border:1px solid var(--border,#45475a);border-radius:8px;padding:5px 8px;font:inherit;font-size:13px;}
+      .cb-mail-run{height:32px;}
+      .cb-mail-check{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-muted,#9399b2);}
+      .cb-mail-sec{border:1px solid var(--border,#45475a);border-radius:10px;padding:8px 12px;}
+      .cb-mail-sec summary{cursor:pointer;font-weight:600;display:flex;align-items:center;gap:10px;}
+      .cb-mail-tabs{display:inline-flex;gap:4px;font-weight:400;}
+      .cb-mail-tabs button{background:none;border:1px solid var(--border,#45475a);color:var(--text-muted,#9399b2);border-radius:6px;padding:1px 8px;font:inherit;font-size:12px;cursor:pointer;}
+      .cb-mail-tabs button.on{color:var(--text-primary,#cdd6f4);background:var(--bg-tertiary,#313244);}
+      .cb-mail-rules{display:flex;flex-direction:column;gap:4px;margin:8px 0;}
+      .cb-mail-rule{display:flex;gap:8px;align-items:center;font-size:13px;padding:5px 8px;border-radius:8px;background:var(--bg-secondary,#181825);flex-wrap:wrap;}
+      .cb-mail-rule.off{opacity:.5;}
+      .cb-mail-acc{font-family:monospace;font-size:11px;color:var(--text-muted,#9399b2);}
+      .cb-mail-action{font-size:11px;padding:1px 6px;border-radius:6px;background:var(--bg-tertiary,#313244);white-space:nowrap;}
+      .cb-mail-action.dry{opacity:.7;font-style:italic;}
+      .cb-mail-instr{color:var(--text-muted,#9399b2);font-size:12px;}
+      .cb-mail-match{flex:1;min-width:120px;}
+      .cb-mail-form{display:grid;grid-template-columns:1.2fr 1.6fr 1.4fr 1fr 2fr auto;gap:6px;align-items:center;}
+      .cb-mail-log{display:flex;flex-direction:column;gap:3px;margin-top:8px;}
+      .cb-mail-entry{border-radius:8px;padding:5px 8px;cursor:pointer;background:var(--bg-secondary,#181825);}
+      .cb-mail-entry:hover{background:var(--bg-tertiary,#313244);}
+      .cb-mail-entry-head{display:flex;gap:10px;align-items:center;font-size:13px;min-width:0;}
+      .cb-mail-from{color:var(--text-muted,#9399b2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;}
+      .cb-mail-subj{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+      .cb-mail-entry-body{margin-top:6px;font-size:12px;}
+      .cb-mail-entry-body pre{white-space:pre-wrap;background:var(--bg-primary,#1e1e2e);border:1px solid var(--border,#45475a);border-radius:8px;padding:8px;max-height:320px;overflow:auto;margin-top:6px;}
       .cb-ta{width:100%;background:var(--bg-secondary,#181825);color:var(--text-primary,#cdd6f4);border:1px solid var(--border,#45475a);border-radius:8px;padding:8px;font:inherit;}
     `;
     document.head.appendChild(s);
@@ -339,14 +369,11 @@ export default async function activate(cl) {
     }
     home = sys.addonData.replace(/\/+$/, "") + "/" + cl.id;
     const mcpUrl = sys.mcp || "http://127.0.0.1:8377/mcp";
-    await putText(
-      "mcp.json",
-      JSON.stringify(
-        { mcpServers: { cyberlife: { type: "http", url: mcpUrl } } },
-        null,
-        2,
-      ),
-    );
+    const mcpServers = { cyberlife: { type: "http", url: mcpUrl } };
+    if (sys.gmailMcp && sys.gmailMcp.command) {
+      mcpServers.gmail = { type: "stdio", command: sys.gmailMcp.command, args: sys.gmailMcp.args || [] };
+    }
+    await putText("mcp.json", JSON.stringify({ mcpServers }, null, 2));
     await writeMemoryFile();
     return home;
   }
@@ -470,9 +497,16 @@ export default async function activate(cl) {
     return `[Kontekst: ${now}, ${p}]`;
   }
 
-  async function allowedTools() {
+  // Chat threads see the app; only the mail thread sees Gmail, and its
+  // destructive gmail tools disappear entirely in dry-run mode.
+  async function allowedTools(thread) {
     const write = !!(await cl.storage.get(K_WRITE));
-    return (write ? READ_TOOLS.concat(WRITE_TOOLS) : READ_TOOLS).map(mcpName);
+    let tools = write ? READ_TOOLS.concat(WRITE_TOOLS) : READ_TOOLS.slice();
+    if (thread && thread.kind === "mail") {
+      tools = tools.concat(MAIL_TOOLS, GMAIL_READ_TOOLS);
+      if (!(await mail.isDryRun())) tools = tools.concat(GMAIL_WRITE_TOOLS);
+    }
+    return [...new Set(tools)].map(mcpName);
   }
 
   function turnScript({ dir, threadId, started, allowed, model }) {
@@ -510,8 +544,8 @@ export default async function activate(cl) {
     const dir = await ensureHome();
     const sys = await systemInfo();
     const model = String((await cl.storage.get(K_MODEL)) || "").trim();
-    const allowed = await allowedTools();
-    await putText("persona.txt", await systemPromptText(allowed.length > READ_TOOLS.length));
+    const allowed = await allowedTools(thread);
+    await putText("persona.txt", await systemPromptText(!!(await cl.storage.get(K_WRITE))));
     const prefix = (await contextLineEnabled()) ? contextLine(sys) + "\n" : "";
     await putText(`threads/${thread.id}/turn.txt`, prefix + message);
 
@@ -582,6 +616,45 @@ export default async function activate(cl) {
     } finally {
       busy = false;
     }
+  }
+
+  // ---------------------------------------------------------------- mail
+  const mail = createMail(cl, { esc, truncate, newId, isBusy: () => busy, startRun: startMailRun });
+
+  async function mailThread() {
+    await ensureLoaded();
+    let id = await cl.storage.get(mail.K_MAIL_THREAD);
+    let t = state.threads.find((x) => x.id === id);
+    if (!t) {
+      t = { id: newId(), kind: "mail", title: "📧 Maile", createdAt: Date.now(), updatedAt: Date.now(), started: false };
+      state.threads.unshift(t);
+      await saveThreads(state.threads);
+      await cl.storage.set(mail.K_MAIL_THREAD, t.id);
+    }
+    return t;
+  }
+
+  // A run is a normal turn in the mail thread: the bubble shows a one-liner,
+  // the model gets the full procedure + rules. Long threads start a fresh
+  // CLI session so old runs stop weighing on the context.
+  async function startMailRun(accounts, { silent = false } = {}) {
+    if (busy || !accounts || !accounts.length) return;
+    const t = await mailThread();
+    state.active = t;
+    state.msgs = await loadMessages(t.id);
+    await cl.storage.set(K_ACTIVE, t.id);
+    if (state.msgs.length >= mail.MAIL_THREAD_RESET_AFTER) {
+      t.id = newId();
+      t.started = false;
+      state.msgs = [];
+      await cl.storage.set(mail.K_MAIL_THREAD, t.id);
+      await saveThreads(state.threads);
+    }
+    if (!silent) cl.openModule("chat", "chat");
+    renderAll();
+    await send(await mail.buildRunMessage(accounts), {
+      display: `📧 Przegląd nieprzeczytanych maili: ${accounts.join(", ")}`,
+    });
   }
 
   // ---------------------------------------------------------------- chat UI
@@ -702,7 +775,7 @@ export default async function activate(cl) {
     if (ta) ta.focus();
   }
 
-  async function send(text) {
+  async function send(text, { display } = {}) {
     text = (text || "").trim();
     if (!text || busy) return;
     await ensureLoaded();
@@ -711,8 +784,8 @@ export default async function activate(cl) {
       await cl.storage.set(K_ACTIVE, state.active.id);
     }
     const thread = state.active;
-    if (!state.msgs.length) thread.title = truncate(text.replace(/\s+/g, " "), 48);
-    state.msgs.push({ role: "user", text, ts: Date.now() });
+    if (!state.msgs.length && !thread.kind) thread.title = truncate(text.replace(/\s+/g, " "), 48);
+    state.msgs.push({ role: "user", text: display || text, ts: Date.now() });
     const bot = { role: "bot", text: "", ts: Date.now() };
     state.msgs.push(bot);
     thread.updatedAt = Date.now();
@@ -868,6 +941,17 @@ export default async function activate(cl) {
         render: (el) => renderHistory(el),
         onShow: () => histEl && renderHistory(histEl),
       },
+      {
+        id: "mail",
+        label: "Maile",
+        icon: "📧",
+        render: (el) => {
+          injectStyle();
+          mail.renderPage(el);
+        },
+        onShow: () => {},
+        onKey: () => false,
+      },
     ],
   });
 
@@ -1012,12 +1096,28 @@ export default async function activate(cl) {
     return { ok: true, lines };
   });
 
+  cl.registerAgentTool("mail_rules", async (args) => {
+    const rules = await mail.loadRules();
+    const account = String((args && args.account) || "").trim().toLowerCase();
+    return { rules: account ? mail.rulesFor(account) : rules };
+  });
+  cl.registerAgentTool("mail_rule_save", async (args) => {
+    const rule = await mail.saveRule(args || {});
+    return { ok: true, rule };
+  });
+  cl.registerAgentTool("mail_log", async (args) => {
+    const entry = await mail.appendLog({ ...(args || {}), dryRun: await mail.isDryRun() });
+    return { ok: true, id: entry.id };
+  });
+  mail.scheduleAuto().catch((e) => cl.log("mail auto schedule failed:", e.message));
+
   ensureHome().catch((e) => cl.log("bot home not ready yet:", e.message));
   cl.log("Cyber Bot ready");
 
   // ---------------------------------------------------------------- dispose
   return async () => {
     disposed = true;
+    mail.dispose();
     state.chatEl = null;
     histEl = null;
     for (const s of activeSessions) {

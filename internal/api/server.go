@@ -40,6 +40,7 @@ type Hooks struct {
 	JiraMap        func(projectID, jiraKey, jiraFilter string) error
 	JiraSync       func(projectID string) (any, error)
 	Dependencies   func() any
+	GmailMcpScript func() string
 	Emit           func(event string)
 	EmitPayload    func(event string, payload any)
 	WebhookFire    func(slug string, body []byte) int
@@ -64,6 +65,7 @@ type Server struct {
 	jiraMap         func(projectID, jiraKey, jiraFilter string) error
 	jiraSync        func(projectID string) (any, error)
 	dependencies    func() any
+	gmailMcpScript  func() string
 	emitEvent       func(event string)
 	emitPayload     func(event string, payload any)
 	webhookFire     func(slug string, body []byte) int
@@ -96,6 +98,7 @@ func NewServer(manager *state.Manager, hooks Hooks) *Server {
 		jiraMap:         hooks.JiraMap,
 		jiraSync:        hooks.JiraSync,
 		dependencies:    hooks.Dependencies,
+		gmailMcpScript:  hooks.GmailMcpScript,
 		emitEvent:       hooks.Emit,
 		emitPayload:     hooks.EmitPayload,
 		webhookFire:     hooks.WebhookFire,

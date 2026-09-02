@@ -389,6 +389,11 @@ func (s *Server) opSystemInfo() (any, error) {
 	if root, err := paths.AddonData(); err == nil {
 		info["addonData"] = root
 	}
+	if s.gmailMcpScript != nil {
+		if script := s.gmailMcpScript(); script != "" {
+			info["gmailMcp"] = map[string]any{"command": "node", "args": []string{script}}
+		}
+	}
 	return info, nil
 }
 

@@ -346,6 +346,26 @@ export class GmailClient {
             return false;
         }
     }
+    // One modify call for the rule-driven actions: mark read/unread, archive
+    // (drop INBOX), custom labels. Gmail applies add + remove atomically.
+    async modifyLabels(id, addLabelIds, removeLabelIds) {
+        if (!this.gmail)
+            return false;
+        if (!addLabelIds.length && !removeLabelIds.length)
+            return true;
+        try {
+            await this.gmail.users.messages.modify({
+                userId: 'me',
+                id,
+                requestBody: { addLabelIds, removeLabelIds },
+            });
+            return true;
+        }
+        catch (error) {
+            console.error(`Failed to modify labels of ${id}:`, error);
+            return false;
+        }
+    }
     async trash(id) {
         if (!this.gmail)
             return false;

@@ -141,6 +141,7 @@ func (a *App) startup(ctx context.Context) {
 			Dependencies: func() any {
 				return a.CheckDependencies()
 			},
+			GmailMcpScript: findGmailMcpScript,
 			Emit: func(event string) {
 				runtime.EventsEmit(a.ctx, event, nil)
 			},

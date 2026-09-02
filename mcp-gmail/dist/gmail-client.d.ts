@@ -97,6 +97,7 @@ export declare class GmailClient {
     searchEmails(query: string, maxResults?: number): Promise<Email[]>;
     markAsRead(id: string): Promise<boolean>;
     markAsUnread(id: string): Promise<boolean>;
+    modifyLabels(id: string, addLabelIds: string[], removeLabelIds: string[]): Promise<boolean>;
     trash(id: string): Promise<boolean>;
     listFilters(): Promise<GmailFilter[]>;
     getFilter(id: string): Promise<GmailFilter | null>;

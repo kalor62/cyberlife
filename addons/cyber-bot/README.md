@@ -18,8 +18,18 @@ thread**, **uses Cyber Life's tools** instead of guessing and keeps a
   default** — enable it in *Settings → Cyber Bot*.
 - **Memory** — `cyber-bot_remember` appends one-line facts to the bot's
   `CLAUDE.md`; the CLI loads it every turn. View/edit/clear it in settings.
+- **Mail** (`📧 Maile` page) — per-mailbox rules (`from` / `subject`
+  substring → trash / archive / markRead / notify / agent instructions), a
+  "check unread mail now" run in a dedicated thread (+ optional interval),
+  and an audit log of every processed message with a stored body excerpt
+  (entries auto-archive after 90 days). Mail the bot has no rule for is never
+  touched — it lists it and proposes rules. Dry-run mode (default on) logs
+  what would happen without changing the mailbox; in dry-run the destructive
+  Gmail tools are not even whitelisted. Gmail reaches the bot through the
+  app's own `mcp-gmail` server, private to the bot's `mcp.json`.
 - **Agent tools** (MCP): `cyber-bot_ask {message}` — another agent or an
-  automation summons the bot (the `@grok` analog); `cyber-bot_remember {note}`.
+  automation summons the bot (the `@grok` analog); `cyber-bot_remember {note}`;
+  `cyber-bot_mail_rules`, `cyber-bot_mail_rule_save`, `cyber-bot_mail_log`.
 - **System prompt fully editable** in settings (presets Zadziorny / Rzeczowy /
   Mentor are one-click starting points), optional `[Kontekst: …]` line per
   message (off/on), optional model override (`sonnet`, `opus`, …).

@@ -218,6 +218,29 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
                 },
             },
             {
+                name: 'gmail_modify',
+                description: 'Change labels of an email: mark read/unread, archive (remove from inbox), add/remove label ids. Reversible, unlike gmail_trash.',
+                inputSchema: {
+                    type: 'object',
+                    properties: {
+                        account: {
+                            type: 'string',
+                            description: 'Account email as shown in Cyber Life (default: first MCP-enabled account)',
+                        },
+                        id: {
+                            type: 'string',
+                            description: 'Email ID',
+                        },
+                        markRead: { type: 'boolean', description: 'Remove the UNREAD label' },
+                        markUnread: { type: 'boolean', description: 'Add the UNREAD label' },
+                        archive: { type: 'boolean', description: 'Remove the INBOX label (Gmail archive)' },
+                        addLabels: { type: 'array', items: { type: 'string' }, description: 'Label ids to add (see gmail_list_labels)' },
+                        removeLabels: { type: 'array', items: { type: 'string' }, description: 'Label ids to remove' },
+                    },
+                    required: ['id'],
+                },
+            },
+            {
                 name: 'gmail_trash',
                 description: 'Move an email to trash.',
                 inputSchema: {
@@ -669,6 +692,37 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 return {
                     content: [{ type: 'text', text: `Failed to create draft: ${result.error}` }],
                     isError: true,
+                };
+            }
+            case 'gmail_modify': {
+                const { account = 'default', id, markRead, markUnread, archive, addLabels = [], removeLabels = [] } = args;
+                if (!(await isAuthenticated(account))) {
+                    return {
+                        content: [{
+                                type: 'text',
+                                text: `Account "${account}" not authenticated. Use gmail_auth first.`,
+                            }],
+                        isError: true,
+                    };
+                }
+                const add = [...addLabels];
+                const remove = [...removeLabels];
+                if (markRead)
+                    remove.push('UNREAD');
+                if (markUnread)
+                    add.push('UNREAD');
+                if (archive)
+                    remove.push('INBOX');
+                const client = await getClient(account);
+                const success = await client.modifyLabels(id, add, remove);
+                return {
+                    content: [{
+                            type: 'text',
+                            text: success
+                                ? `Email updated (added: ${add.join(', ') || '-'}; removed: ${remove.join(', ') || '-'}).`
+                                : 'Failed to modify email.',
+                        }],
+                    isError: !success,
                 };
             }
             case 'gmail_trash': {
