@@ -27,6 +27,11 @@ jobs:
       - name: Test
         run: go test ./internal/...
 
+      # main.go embeds frontend/dist; the linter type-checks the root package
+      # and needs the directory to exist, the contents do not matter here
+      - name: Placeholder frontend bundle for typecheck
+        run: mkdir -p frontend/dist && echo placeholder > frontend/dist/index.html
+
       - name: Lint (Go)
         uses: golangci/golangci-lint-action@v8
         with:
