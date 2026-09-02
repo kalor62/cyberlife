@@ -2,7 +2,7 @@
   "id": "cyber-bot",
   "name": "Cyber Bot",
   "icon": "🤖",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Grok-style chat bot for Cyber Life. Runs on the Claude Code CLI (no extra API key), remembers each thread (--session-id/--resume), uses Cyber Life MCP tools (board, notes, terminarz, KSeF, nitroarena) instead of guessing, and keeps long-term memory in its own CLAUDE.md. Other agents can summon it via cyber-bot_ask.",
   "author": "Cyber Life contributors",
   "category": "productivity",
