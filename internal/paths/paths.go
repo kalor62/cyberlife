@@ -50,7 +50,7 @@ func Addons() (string, error) { return Sub("addons") }
 // AddonData is the per-addon blob store (binary artifacts too big for the
 // addon KV storage); layout is addon-data/<addonId>/<relative path>
 func AddonData() (string, error) { return Sub("addon-data") }
-func Logs() (string, error)   { return Sub("logs") }
+func Logs() (string, error)      { return Sub("logs") }
 func Screenshots(projectID string) (string, error) {
 	return Sub("screenshots", filepath.Base(projectID))
 }

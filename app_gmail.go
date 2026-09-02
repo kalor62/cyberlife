@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/kalor62/cyberlife/internal/gmail"
-	"github.com/kalor62/cyberlife/internal/paths"
 	"github.com/kalor62/cyberlife/internal/logging"
+	"github.com/kalor62/cyberlife/internal/paths"
 	"github.com/kalor62/cyberlife/internal/platform"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 	gmailapi "google.golang.org/api/gmail/v1"
