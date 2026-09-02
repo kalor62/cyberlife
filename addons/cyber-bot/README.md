@@ -20,8 +20,9 @@ thread**, **uses Cyber Life's tools** instead of guessing and keeps a
   `CLAUDE.md`; the CLI loads it every turn. View/edit/clear it in settings.
 - **Agent tools** (MCP): `cyber-bot_ask {message}` — another agent or an
   automation summons the bot (the `@grok` analog); `cyber-bot_remember {note}`.
-- **Persona presets** (Zadziorny / Rzeczowy / Mentor) + a custom persona,
-  optional model override (`sonnet`, `opus`, …).
+- **System prompt fully editable** in settings (presets Zadziorny / Rzeczowy /
+  Mentor are one-click starting points), optional `[Kontekst: …]` line per
+  message (off/on), optional model override (`sonnet`, `opus`, …).
 
 ## How a turn works
 
@@ -30,7 +31,7 @@ thread**, **uses Cyber Life's tools** instead of guessing and keeps a
 2. It launches a Cyber Life session with the built-in `shell` runner:
    `claude -p --session-id <thread>` (first turn) or `--resume <thread>`,
    `--permission-mode manual --tools "" --mcp-config mcp.json
-   --strict-mcp-config --allowedTools <whitelist>`, persona as
+   --strict-mcp-config --allowedTools <whitelist>`, the system prompt as
    `--append-system-prompt`, then prints `<<<CBEND>>>` and idles.
 3. It polls the pane, streams the text into the bubble, stops at the marker and
    closes the session. Persistence lives in the CLI's own session store, not in
