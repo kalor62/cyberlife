@@ -3,10 +3,11 @@ package health
 import (
 	"bufio"
 	"encoding/json"
-	"fmt"
+	"github.com/kalor62/cyberlife/internal/logging"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -200,7 +201,7 @@ func detectNodeVersion(projectPath string) (version string, source string) {
 		if err := json.Unmarshal(data, &pkg); err == nil && pkg.Engines.Node != "" {
 			// Extract version number from constraint like ">=18.0.0" or "^20.0.0"
 			v := pkg.Engines.Node
-			v = strings.TrimLeft(v, ">=^~<>! ")
+			v = strings.TrimLeft(v, ">=^~<! ")
 			if v != "" {
 				return v, "package.json engines"
 			}
@@ -216,8 +217,10 @@ func parseNodeMajor(version string) int {
 	if len(parts) == 0 {
 		return 0
 	}
-	major := 0
-	fmt.Sscanf(parts[0], "%d", &major)
+	major, err := strconv.Atoi(parts[0])
+	if err != nil {
+		return 0
+	}
 	return major
 }
 
@@ -250,7 +253,7 @@ func scanLoggingPatterns(projectPath string, isJS, isGo bool) loggingStats {
 		if !fileExists(fullDir) {
 			continue
 		}
-		filepath.Walk(fullDir, func(path string, info os.FileInfo, err error) error {
+		walkErr := filepath.Walk(fullDir, func(path string, info os.FileInfo, err error) error {
 			if err != nil || info.IsDir() {
 				return nil
 			}
@@ -259,6 +262,9 @@ func scanLoggingPatterns(projectPath string, isJS, isGo bool) loggingStats {
 			}
 			return nil
 		})
+		if walkErr != nil {
+			logging.Debug("health: logging scan walk failed", "dir", fullDir, "error", walkErr)
+		}
 	}
 
 	// Collect root-level source files
@@ -527,7 +533,7 @@ func matchesJSLogCall(lower, level string) bool {
 
 // matchesGoLogCall checks if a line contains a Go log call at the given level
 func matchesGoLogCall(lower, level string) bool {
-	goLevel := strings.Title(level)
+	goLevel := capitalize(level)
 	patterns := []string{
 		"slog." + goLevel + "(",
 		"log." + goLevel + "(",
@@ -587,7 +593,7 @@ func flattenDeps(allDeps []claude.AppDependencies) map[string]string {
 
 func hasGoTestFiles(projectPath string) bool {
 	found := false
-	filepath.Walk(projectPath, func(path string, info os.FileInfo, err error) error {
+	walkErr := filepath.Walk(projectPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil || found {
 			return filepath.SkipDir
 		}
@@ -603,7 +609,19 @@ func hasGoTestFiles(projectPath string) bool {
 		}
 		return nil
 	})
+	if walkErr != nil {
+		logging.Debug("health: go test scan walk failed", "path", projectPath, "error", walkErr)
+	}
 	return found
+}
+
+// capitalize upper-cases the first letter (ASCII) — what the Go log level
+// method names need; strings.Title is deprecated and overkill here.
+func capitalize(s string) string {
+	if s == "" {
+		return s
+	}
+	return strings.ToUpper(s[:1]) + s[1:]
 }
 
 func hasCoverageConfig(projectPath string) bool {
@@ -677,7 +695,7 @@ func checkGitignoreContains(projectPath, pattern string) bool {
 	if err != nil {
 		return false
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }() // read-only
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())

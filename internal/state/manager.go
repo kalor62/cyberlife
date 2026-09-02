@@ -161,7 +161,9 @@ func (m *Manager) Save() {
 	}
 
 	m.saveTimer = time.AfterFunc(500*time.Millisecond, func() {
-		m.saveImmediate()
+		if err := m.saveImmediate(); err != nil {
+			logging.Error("state: debounced save failed", "error", err)
+		}
 	})
 }
 

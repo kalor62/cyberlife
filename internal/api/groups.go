@@ -74,21 +74,6 @@ func groupPost[T any](s *Server, id string, op func(T) (any, error)) http.Handle
 	}
 }
 
-// groupGet builds a REST handler for an op that takes no request body
-func groupGet(s *Server, id string, op func() (any, error)) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if !s.guardGroup(w, id) {
-			return
-		}
-		out, err := op()
-		if err != nil {
-			writeErr(w, http.StatusInternalServerError, err)
-			return
-		}
-		writeJSON(w, http.StatusOK, out)
-	}
-}
-
 // toolGroup binds a group id to its MCP surface; tools/list and tools/call
 // walk this table rather than repeating a branch per group
 type toolGroup struct {

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/kalor62/cyberlife/internal/claude"
+	"github.com/kalor62/cyberlife/internal/logging"
 )
 
 // CheckDef is one entry in the health check library. Built-in defs cover
@@ -356,7 +357,7 @@ func loggingCheck(def CheckDef, projectPath string) HealthCheckItem {
 // grepSourceContains does a shallow scan of .go files for a substring
 func grepSourceContains(projectPath, needle string) bool {
 	found := false
-	filepath.Walk(projectPath, func(path string, info os.FileInfo, err error) error {
+	walkErr := filepath.Walk(projectPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil || found {
 			return filepath.SkipDir
 		}
@@ -374,6 +375,9 @@ func grepSourceContains(projectPath, needle string) bool {
 		}
 		return nil
 	})
+	if walkErr != nil {
+		logging.Debug("health: source grep walk failed", "path", projectPath, "error", walkErr)
+	}
 	return found
 }
 
@@ -390,9 +394,6 @@ func SelectedReport(projectPath string, defs []CheckDef, selected []string, tool
 	}
 	manual := GetManualChecks(projectPath)
 
-	type group struct {
-		category *HealthCategory
-	}
 	groups := map[string]*HealthCategory{}
 	order := []string{}
 

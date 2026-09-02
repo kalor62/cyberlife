@@ -56,13 +56,7 @@ func (a *App) StartVoiceRecognition(lang string) string {
 
 	// Stop any existing voice process
 	if a.voiceProcess != nil {
-		if a.voiceStdin != nil {
-			a.voiceStdin.Write([]byte("stop\n"))
-			a.voiceStdin.Close()
-		}
-		a.voiceProcess.Wait()
-		a.voiceProcess = nil
-		a.voiceStdin = nil
+		a.stopVoiceProcessLocked()
 	}
 
 	// Find the voice_input binary using same candidate pattern as Python bridge
@@ -171,14 +165,27 @@ func (a *App) StopVoiceRecognition() {
 	defer a.voiceMu.Unlock()
 
 	if a.voiceProcess != nil {
-		if a.voiceStdin != nil {
-			a.voiceStdin.Write([]byte("stop\n"))
-			a.voiceStdin.Close()
-			a.voiceStdin = nil
-		}
-		a.voiceProcess.Wait()
-		a.voiceProcess = nil
+		a.stopVoiceProcessLocked()
 	}
+}
+
+// stopVoiceProcessLocked asks the helper to stop and reaps it. Write/Wait
+// errors only mean the process is already gone, which is the state we want.
+// Caller holds voiceMu.
+func (a *App) stopVoiceProcessLocked() {
+	if a.voiceStdin != nil {
+		if _, err := a.voiceStdin.Write([]byte("stop\n")); err != nil {
+			logging.Debug("voice: stop command not delivered", "error", err)
+		}
+		if err := a.voiceStdin.Close(); err != nil {
+			logging.Debug("voice: stdin close failed", "error", err)
+		}
+		a.voiceStdin = nil
+	}
+	if err := a.voiceProcess.Wait(); err != nil {
+		logging.Debug("voice: process exited with error", "error", err)
+	}
+	a.voiceProcess = nil
 }
 
 // ResetVoiceRecognition tells the voice process to restart its recognition
@@ -187,6 +194,8 @@ func (a *App) ResetVoiceRecognition() {
 	a.voiceMu.Lock()
 	defer a.voiceMu.Unlock()
 	if a.voiceStdin != nil {
-		a.voiceStdin.Write([]byte("reset\n"))
+		if _, err := a.voiceStdin.Write([]byte("reset\n")); err != nil {
+			logging.Warn("voice: reset command not delivered", "error", err)
+		}
 	}
 }

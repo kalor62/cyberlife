@@ -301,12 +301,14 @@ func TestValidateLogLevel(t *testing.T) {
 	}
 
 	// Initialize a basic logger first to avoid nil pointer
-	Init(Config{
+	if err := Init(Config{
 		LogDir:     "/tmp/test-logs",
 		MaxAge:     DefaultMaxAge,
 		JSONOutput: false,
 		DevMode:    false,
-	})
+	}); err != nil {
+		t.Fatalf("Init failed: %v", err)
+	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

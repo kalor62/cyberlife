@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -301,14 +302,10 @@ func (m *Manager) getCommitDetails(repoPath, hash string) ([]CommitFile, CommitS
 
 		parts := strings.Fields(line)
 		if len(parts) >= 2 {
-			if parts[0] != "-" {
-				var ins int
-				fmt.Sscanf(parts[0], "%d", &ins)
+			if ins, err := strconv.Atoi(parts[0]); err == nil {
 				stats.Insertions += ins
 			}
-			if parts[1] != "-" {
-				var del int
-				fmt.Sscanf(parts[1], "%d", &del)
+			if del, err := strconv.Atoi(parts[1]); err == nil {
 				stats.Deletions += del
 			}
 		}

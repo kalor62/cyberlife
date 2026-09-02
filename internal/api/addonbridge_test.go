@@ -50,7 +50,7 @@ func TestAllowedProxyTarget(t *testing.T) {
 // hop's approval would carry the caller anywhere, including loopback.
 func TestProxyClientRefusesRedirectOffAllowlist(t *testing.T) {
 	internal := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("SECRET"))
+		_, _ = w.Write([]byte("SECRET"))
 	}))
 	defer internal.Close()
 

@@ -10,6 +10,10 @@ linters:
     - staticcheck
     - unused
 
+  exclusions:
+    paths:
+      - frontend/node_modules
+
   settings:
     errcheck:
       # Fire-and-forget cleanups where the error genuinely has no action

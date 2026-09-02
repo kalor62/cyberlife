@@ -1,6 +1,7 @@
 package logging
 
 import (
+	"fmt"
 	"io"
 	"log/slog"
 	"os"
@@ -148,7 +149,10 @@ func (h *RotatingFileHandler) Write(p []byte) (n int, err error) {
 // rotate closes current file and opens new one for today
 func (h *RotatingFileHandler) rotate() error {
 	if h.currentFile != nil {
-		h.currentFile.Close()
+		if err := h.currentFile.Close(); err != nil {
+			// the logger itself cannot log here; stderr is the only channel left
+			fmt.Fprintf(os.Stderr, "logging: closing rotated file failed: %v\n", err)
+		}
 	}
 
 	today := time.Now().Format("2006-01-02")

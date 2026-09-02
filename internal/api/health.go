@@ -6,19 +6,12 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/kalor62/cyberlife/internal/addons"
-	"github.com/kalor62/cyberlife/internal/agentskills"
 	"github.com/kalor62/cyberlife/internal/health"
 	"github.com/kalor62/cyberlife/internal/state"
 )
 
 // Health tools: agents are the evaluators of custom checks — they define
 // checks, verify them against the codebase and set the result with a comment.
-
-func (s *Server) healthEnabled() bool {
-	return agentskills.Enabled("health", s.manager.GetAgentSkills()) &&
-		addons.Enabled("health", s.manager.GetAddonsEnabled())
-}
 
 type healthRequest struct {
 	Project     string   `json:"project"`

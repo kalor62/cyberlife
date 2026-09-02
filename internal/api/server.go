@@ -238,8 +238,6 @@ func localOnly(next http.Handler) http.Handler {
 	})
 }
 
-func (s *Server) boardEnabled() bool { return s.groupEnabled("board") }
-
 func (s *Server) notify(projectID string) {
 	if s.onChange != nil {
 		s.onChange(projectID)

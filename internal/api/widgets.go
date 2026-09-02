@@ -33,17 +33,6 @@ func widgetCatalog() []widgetInfo {
 	}
 }
 
-func widgetByID(id string) (widgetInfo, bool) {
-	for _, w := range widgetCatalog() {
-		if w.ID == id {
-			return w, true
-		}
-	}
-	return widgetInfo{}, false
-}
-
-func (s *Server) widgetsEnabled() bool { return s.groupEnabled("widgets") }
-
 type widgetsRequest struct {
 	Sidebar      []string         `json:"sidebar,omitempty"`
 	Collapsed    *bool            `json:"collapsed,omitempty"`

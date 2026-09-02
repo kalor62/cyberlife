@@ -15,12 +15,6 @@ import (
 // prompts and a read-only system_info. Each group is gated by its own
 // skill so permissions stay granular.
 
-func (s *Server) projectsEnabled() bool { return s.groupEnabled("projects") }
-func (s *Server) tasksEnabled() bool    { return s.groupEnabled("tasks") }
-func (s *Server) notesEnabled() bool    { return s.groupEnabled("notes") }
-func (s *Server) promptsEnabled() bool  { return s.groupEnabled("prompts") }
-func (s *Server) systemEnabled() bool   { return s.groupEnabled("system") }
-
 type workspaceRequest struct {
 	Project string  `json:"project,omitempty"`
 	Name    string  `json:"name,omitempty"`

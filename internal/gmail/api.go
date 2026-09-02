@@ -254,10 +254,10 @@ func walkParts(part *gmailapi.MessagePart, messageID string, html, text *strings
 	if part.Body != nil && part.Body.Data != "" {
 		data, err := decodeBase64URL(part.Body.Data)
 		if err == nil {
-			switch {
-			case mime == "text/html":
+			switch mime {
+			case "text/html":
 				html.Write(data)
-			case mime == "text/plain":
+			case "text/plain":
 				text.Write(data)
 			}
 		}

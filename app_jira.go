@@ -70,7 +70,7 @@ func (a *App) SetProjectJira(projectID, jiraProject, jiraFilter string) error {
 		return fmt.Errorf("state manager not initialized")
 	}
 	if !a.addonOn("jira") {
-		return fmt.Errorf("Jira addon is disabled (Settings → Addons)")
+		return fmt.Errorf("jira addon is disabled (Settings → Addons)")
 	}
 	return a.stateManager.SetProjectJira(projectID,
 		strings.ToUpper(strings.TrimSpace(jiraProject)), strings.TrimSpace(jiraFilter))
@@ -82,7 +82,7 @@ func (a *App) SyncJiraBoard(projectID string) (JiraSyncResult, error) {
 		return JiraSyncResult{}, fmt.Errorf("state manager not initialized")
 	}
 	if !a.addonOn("jira") {
-		return JiraSyncResult{}, fmt.Errorf("Jira addon is disabled (Settings → Addons)")
+		return JiraSyncResult{}, fmt.Errorf("jira addon is disabled (Settings → Addons)")
 	}
 	settings := a.stateManager.GetJiraSettings()
 	if !settings.Enabled {

@@ -13,8 +13,6 @@ import (
 // same sessions the user sees in the Term module. Creation goes through an
 // App hook so runner resolution and naming match the UI path.
 
-func (s *Server) termEnabled() bool { return s.groupEnabled("term") }
-
 type termRequest struct {
 	Session string `json:"session,omitempty"`
 	Project string `json:"project,omitempty"`

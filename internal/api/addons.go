@@ -17,8 +17,6 @@ import (
 // of each enabled addon is served from this server at /addons/<id>/<path>
 // and imported by the webview at startup.
 
-func (s *Server) addonsEnabled() bool { return s.groupEnabled("addons") }
-
 type addonsRequest struct {
 	Addon   string          `json:"addon,omitempty"`
 	Enabled *bool           `json:"enabled,omitempty"`

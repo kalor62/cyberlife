@@ -193,7 +193,7 @@ func parseStyledLine(line string, state *sgrState) []StyledRun {
 		case ']':
 			// OSC: consume until BEL or ST
 			j := i + 2
-			for j < len(line) && line[j] != 0x07 && !(line[j] == 0x1b && j+1 < len(line) && line[j+1] == '\\') {
+			for j < len(line) && line[j] != 0x07 && (line[j] != 0x1b || j+1 >= len(line) || line[j+1] != '\\') {
 				j++
 			}
 			if j < len(line) && line[j] == 0x1b {

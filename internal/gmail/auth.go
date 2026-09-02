@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/kalor62/cyberlife/internal/platform"
+	"html"
 	"net"
 	"net/http"
 	"sync"
@@ -43,7 +44,7 @@ func (m *Manager) SetTokenRefreshHandler(fn func(email, tokenJSON string)) {
 
 func oauthConfig(clientID, clientSecret, redirectURL string) (*oauth2.Config, error) {
 	if clientID == "" || clientSecret == "" {
-		return nil, fmt.Errorf("Gmail Client ID/Secret not configured (Settings → Gmail)")
+		return nil, fmt.Errorf("gmail Client ID/Secret not configured (Settings → Gmail)")
 	}
 	return &oauth2.Config{
 		ClientID:     clientID,
@@ -61,7 +62,11 @@ func (m *Manager) Authorize(ctx context.Context, clientID, clientSecret string) 
 	if err != nil {
 		return "", "", fmt.Errorf("cannot open local port: %w", err)
 	}
-	defer listener.Close()
+	defer func() {
+		if err := listener.Close(); err != nil {
+			logging.Debug("OAuth listener close failed", "error", err)
+		}
+	}()
 
 	redirect := fmt.Sprintf("http://%s/oauth/callback", listener.Addr().String())
 	cfg, err := oauthConfig(clientID, clientSecret, redirect)
@@ -89,11 +94,11 @@ func (m *Manager) Authorize(ctx context.Context, clientID, clientSecret string) 
 			return
 		}
 		if errMsg := q.Get("error"); errMsg != "" {
-			fmt.Fprintf(w, "<html><body style='font-family:sans-serif'><h2>Authorization failed</h2><p>%s</p></body></html>", errMsg)
+			writePage(w, fmt.Sprintf("<html><body style='font-family:sans-serif'><h2>Authorization failed</h2><p>%s</p></body></html>", html.EscapeString(errMsg)))
 			errCh <- fmt.Errorf("authorization denied: %s", errMsg)
 			return
 		}
-		fmt.Fprint(w, "<html><body style='font-family:sans-serif;background:#0f172a;color:#e2e8f0;display:flex;align-items:center;justify-content:center;height:100vh'><div style='text-align:center'><h2>✅ Gmail connected</h2><p>You can close this window and return to Cyber Life.</p></div></body></html>")
+		writePage(w, "<html><body style='font-family:sans-serif;background:#0f172a;color:#e2e8f0;display:flex;align-items:center;justify-content:center;height:100vh'><div style='text-align:center'><h2>✅ Gmail connected</h2><p>You can close this window and return to Cyber Life.</p></div></body></html>")
 		codeCh <- q.Get("code")
 	})}
 	go func() {
@@ -101,7 +106,11 @@ func (m *Manager) Authorize(ctx context.Context, clientID, clientSecret string) 
 			logging.Debug("OAuth callback server closed", "error", serveErr)
 		}
 	}()
-	defer server.Close()
+	defer func() {
+		if err := server.Close(); err != nil {
+			logging.Debug("OAuth callback server close failed", "error", err)
+		}
+	}()
 
 	authURL := cfg.AuthCodeURL(state, oauth2.AccessTypeOffline, oauth2.SetAuthURLParam("prompt", "consent"))
 	if err := platform.OpenExternal(authURL); err != nil {
@@ -210,4 +219,12 @@ func (m *Manager) DropService(email string) {
 	m.mu.Lock()
 	delete(m.services, email)
 	m.mu.Unlock()
+}
+
+// writePage sends the browser-facing OAuth result page; a failed write only
+// means the user closed the tab early, the token exchange is unaffected.
+func writePage(w http.ResponseWriter, page string) {
+	if _, err := fmt.Fprint(w, page); err != nil {
+		logging.Debug("OAuth result page write failed", "error", err)
+	}
 }

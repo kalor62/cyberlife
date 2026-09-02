@@ -958,18 +958,24 @@ func (c *Controller) runAppleScript(script string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to create temp file: %w", err)
 	}
-	defer os.Remove(tmpFile.Name())
+	defer func() {
+		if err := os.Remove(tmpFile.Name()); err != nil {
+			logging.Debug("applescript temp file remove failed", "error", err)
+		}
+	}()
 
 	if _, err := tmpFile.WriteString(script); err != nil {
-		tmpFile.Close()
+		_ = tmpFile.Close()
 		return "", fmt.Errorf("failed to write script: %w", err)
 	}
 	// Ensure data is written to disk before running
 	if err := tmpFile.Sync(); err != nil {
-		tmpFile.Close()
+		_ = tmpFile.Close()
 		return "", fmt.Errorf("failed to sync script: %w", err)
 	}
-	tmpFile.Close()
+	if err := tmpFile.Close(); err != nil {
+		return "", fmt.Errorf("failed to close script: %w", err)
+	}
 
 	cmd := exec.Command("osascript", tmpFile.Name())
 	output, err := cmd.Output()

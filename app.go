@@ -50,7 +50,6 @@ type App struct {
 	voiceStdin       io.WriteCloser
 	voiceMu          sync.Mutex
 	mu               sync.RWMutex
-	cachedSkillsScan []claude.UnifiedSkill // cached scan for diff/graph reuse
 }
 
 // NewApp creates a new App
@@ -219,7 +218,9 @@ func (a *App) shutdown(ctx context.Context) {
 		a.itermController.StopPolling()
 	}
 	if a.stateManager != nil {
-		a.stateManager.SaveSync()
+		if err := a.stateManager.SaveSync(); err != nil {
+			logging.Error("state save on shutdown failed", "error", err)
+		}
 	}
 }
 
@@ -940,32 +941,6 @@ func (a *App) GetProjectDependencies(projectPath string) map[string]string {
 	}
 	deps, _ := a.toolsManager.GetProjectDependencies(projectPath)
 	return deps
-}
-
-// getProjectsMap builds a name->path map of registered projects (M1: deduplicated)
-func (a *App) getProjectsMap() map[string]string {
-	projects := make(map[string]string)
-	if a.stateManager != nil {
-		for _, p := range a.stateManager.GetProjects() {
-			if p.Path != "" {
-				projects[p.Name] = p.Path
-			}
-		}
-	}
-	return projects
-}
-
-// isRegisteredProject checks if a path is a registered project
-func (a *App) isRegisteredProject(path string) bool {
-	if a.stateManager == nil {
-		return false
-	}
-	for _, p := range a.stateManager.GetProjects() {
-		if p.Path == path {
-			return true
-		}
-	}
-	return false
 }
 
 // GetManualChecks returns manual check states for a project
