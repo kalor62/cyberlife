@@ -325,9 +325,19 @@ export function matchFileToInvoice(fields, invoices, { dir = 'cost' } = {}) {
     }
   }
 
+  // Amount-only fallback. Recurring bills (hosting, SaaS) repeat the exact
+  // amount every month, so this must not reach back to last month's record:
+  // a document whose own number is readable and differs from the candidate's
+  // is a different invoice, and the date window stays under one billing cycle.
   if (dateSet.length && fields.amounts.strong.length) {
+    const otherNumber = (inv) => {
+      const invTok = normToken(inv.number);
+      if (!numTokens.length || !invTok || invTok.length < 3) return false;
+      return !numTokens.some((t) => t === invTok || t.includes(invTok) || invTok.includes(t));
+    };
+    const withinCycle = (inv) => dateSet.some((d) => Math.abs(Date.parse(d) - Date.parse(inv.issueDate)) <= 20 * 86400e3);
     for (const a of fields.amounts.strong) {
-      const near = pool.filter((inv) => grossOk(inv, a) && dated(inv));
+      const near = pool.filter((inv) => grossOk(inv, a) && withinCycle(inv) && !otherNumber(inv));
       if (near.length === 1) return { invoice: near[0], how: 'kwota + data (do weryfikacji)' };
     }
   }
