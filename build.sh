@@ -6,6 +6,12 @@ set -euo pipefail
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$PROJECT_DIR"
 
+# wails v2.11 generates bindings with an x/tools that cannot read export data
+# from Go >= 1.27 ("internal error: package "os" without types"), and the
+# build then stops with the OLD binary still in build/bin. Pin the toolchain
+# the project is tested with; `go` downloads it on first use.
+export GOTOOLCHAIN="${GOTOOLCHAIN:-go1.25.3}"
+
 WAILS="${WAILS:-$HOME/go/bin/wails}"
 if [ ! -x "$WAILS" ]; then
   WAILS="$(command -v wails || true)"
