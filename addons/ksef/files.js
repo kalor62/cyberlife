@@ -84,10 +84,15 @@ export function extractNips(text, ownNip) {
 
 // Gross candidates, strongest first: amounts on "do zapłaty"-style lines,
 // then every plausible money value found anywhere (largest first)
+// strong = the document's total(s): amounts on a "total / do zapłaty" line,
+// else the largest amount written with its currency glued on ("PLN540.30",
+// "€180.00") — receipts like Meta's print the total that way with no label.
 export function extractAmounts(text) {
   const strong = [];
+  const labelled = [];
   const all = new Set();
-  const MONEY_RE = /(\d{1,3}(?:[\s .,]\d{3})*[.,]\d{2})/g;
+  const MONEY_RE = /(\d{1,3}(?:[\s .,]\d{3})*[.,]\d{2})/g;
+  const CURRENCY_MONEY_RE = /(?:EUR|USD|GBP|CHF|PLN|€|\$|£)\s?(\d{1,3}(?:[\s .,]\d{3})*[.,]\d{2})|(\d{1,3}(?:[\s .,]\d{3})*[.,]\d{2})\s?(?:EUR|USD|GBP|CHF|PLN|zł)/gi;
   for (const line of text.split('\n')) {
     const amounts = [...line.matchAll(MONEY_RE)].map((m) => plNumber(m[1])).filter((n) => n > 0 && n < 10_000_000);
     if (!amounts.length) continue;
@@ -95,7 +100,12 @@ export function extractAmounts(text) {
     if (/do\s+zap[lł]aty|raz[ae]m\s+do|total\s+due|amount\s+due|grand\s+total|suma\s+brutto|warto[sś][cć]\s+brutto|[lł][aą]czna\s+kwota|total(?!\s+net)/i.test(line)) {
       strong.push(...amounts);
     }
+    for (const m of line.matchAll(CURRENCY_MONEY_RE)) {
+      const n = plNumber(m[1] || m[2]);
+      if (n > 0 && n < 10_000_000) labelled.push(n);
+    }
   }
+  if (!strong.length && labelled.length) strong.push(Math.max(...labelled));
   return { strong: [...new Set(strong)], all: [...all].sort((a, b) => b - a) };
 }
 

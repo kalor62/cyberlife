@@ -2,7 +2,7 @@
   "id": "ksef",
   "name": "KSeF",
   "icon": "🧾",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Polish market 🇵🇱: e-invoicing via the national KSeF 2.0 API — browse incoming cost invoices and your sales, issue FA(3) invoices without leaving the app, track payments. Includes a one-time history import from Fakturownia.pl (numbers, payment statuses, KSeF ids).",
   "author": "Cyber Life community",
   "category": "integrations",
