@@ -2,11 +2,18 @@
   "id": "ksef",
   "name": "KSeF",
   "icon": "🧾",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Polish market 🇵🇱: e-invoicing via the national KSeF 2.0 API — browse incoming cost invoices and your sales, issue FA(3) invoices without leaving the app, track payments. Includes a one-time history import from Fakturownia.pl (numbers, payment statuses, KSeF ids).",
   "author": "Cyber Life community",
   "category": "integrations",
-  "tags": ["poland", "ksef", "invoices", "e-invoicing", "fakturownia", "faktury"],
+  "tags": [
+    "poland",
+    "ksef",
+    "invoices",
+    "e-invoicing",
+    "fakturownia",
+    "faktury"
+  ],
   "entry": "main.js",
   "permissions": [],
   "hosts": [
@@ -16,8 +23,20 @@
     "*.fakturownia.pl"
   ],
   "widgets": [
-    { "id": "ksef.today", "title": "KSeF Today", "icon": "📥", "description": "Invoices that arrived in KSeF today", "dashboard": true },
-    { "id": "ksef.unpaid", "title": "Unpaid Invoices", "icon": "💸", "description": "Sales invoices awaiting payment", "dashboard": true }
+    {
+      "id": "ksef.today",
+      "title": "KSeF Today",
+      "icon": "📥",
+      "description": "Invoices that arrived in KSeF today",
+      "dashboard": true
+    },
+    {
+      "id": "ksef.unpaid",
+      "title": "Unpaid Invoices",
+      "icon": "💸",
+      "description": "Sales invoices awaiting payment",
+      "dashboard": true
+    }
   ],
   "modules": [
     {
@@ -25,11 +44,31 @@
       "label": "KSeF",
       "icon": "🧾",
       "pages": [
-        { "id": "invoices", "label": "Faktury", "icon": "🧾" },
-        { "id": "clients", "label": "Klienci", "icon": "👥" },
-        { "id": "bank", "label": "Wyciągi", "icon": "🏦" },
-        { "id": "files", "label": "Pliki", "icon": "📄" },
-        { "id": "fv", "label": "Fakturownia", "icon": "🔄" }
+        {
+          "id": "invoices",
+          "label": "Faktury",
+          "icon": "🧾"
+        },
+        {
+          "id": "clients",
+          "label": "Klienci",
+          "icon": "👥"
+        },
+        {
+          "id": "bank",
+          "label": "Wyciągi",
+          "icon": "🏦"
+        },
+        {
+          "id": "files",
+          "label": "Pliki",
+          "icon": "📄"
+        },
+        {
+          "id": "fv",
+          "label": "Fakturownia",
+          "icon": "🔄"
+        }
       ]
     }
   ],
@@ -37,7 +76,10 @@
     {
       "name": "list_companies",
       "description": "List configured companies (id, name, NIP, KSeF environment, last sync time)",
-      "schema": { "type": "object", "properties": {} }
+      "schema": {
+        "type": "object",
+        "properties": {}
+      }
     },
     {
       "name": "list_invoices",
@@ -45,13 +87,37 @@
       "schema": {
         "type": "object",
         "properties": {
-          "company": { "type": "string", "description": "Company name, id or NIP; optional when only one is configured" },
-          "direction": { "type": "string", "enum": ["sale", "cost"] },
-          "unpaid": { "type": "boolean", "description": "Only unpaid (excludes proformas)" },
-          "from": { "type": "string", "description": "Issue date lower bound YYYY-MM-DD" },
-          "to": { "type": "string", "description": "Issue date upper bound YYYY-MM-DD" },
-          "query": { "type": "string", "description": "Substring match on number, KSeF number or contractor" },
-          "limit": { "type": "integer", "default": 50 }
+          "company": {
+            "type": "string",
+            "description": "Company name, id or NIP; optional when only one is configured"
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "sale",
+              "cost"
+            ]
+          },
+          "unpaid": {
+            "type": "boolean",
+            "description": "Only unpaid (excludes proformas)"
+          },
+          "from": {
+            "type": "string",
+            "description": "Issue date lower bound YYYY-MM-DD"
+          },
+          "to": {
+            "type": "string",
+            "description": "Issue date upper bound YYYY-MM-DD"
+          },
+          "query": {
+            "type": "string",
+            "description": "Substring match on number, KSeF number or contractor"
+          },
+          "limit": {
+            "type": "integer",
+            "default": 50
+          }
         }
       }
     },
@@ -60,30 +126,89 @@
       "description": "Create a sales invoice (VAT or proforma) with Fakturownia-style numbering; optionally send it straight to KSeF (send: true).",
       "schema": {
         "type": "object",
-        "required": ["buyerName", "lines"],
+        "required": [
+          "buyerName",
+          "lines"
+        ],
         "properties": {
-          "company": { "type": "string", "description": "Company name, id or NIP; optional when only one is configured" },
-          "kind": { "type": "string", "enum": ["vat", "proforma"], "default": "vat" },
-          "buyerName": { "type": "string" },
-          "buyerNip": { "type": "string" },
-          "buyerAddress1": { "type": "string" },
-          "buyerAddress2": { "type": "string" },
-          "issueDate": { "type": "string", "description": "YYYY-MM-DD, default today" },
-          "paymentTo": { "type": "string", "description": "Payment due date YYYY-MM-DD" },
-          "currency": { "type": "string", "default": "PLN" },
-          "number": { "type": "string", "description": "Override the auto-generated number" },
-          "send": { "type": "boolean", "description": "Send to KSeF immediately after creating" },
+          "company": {
+            "type": "string",
+            "description": "Company name, id or NIP; optional when only one is configured"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "vat",
+              "proforma"
+            ],
+            "default": "vat"
+          },
+          "buyerName": {
+            "type": "string"
+          },
+          "buyerNip": {
+            "type": "string"
+          },
+          "buyerAddress1": {
+            "type": "string"
+          },
+          "buyerAddress2": {
+            "type": "string"
+          },
+          "issueDate": {
+            "type": "string",
+            "description": "YYYY-MM-DD, default today"
+          },
+          "paymentTo": {
+            "type": "string",
+            "description": "Payment due date YYYY-MM-DD"
+          },
+          "currency": {
+            "type": "string",
+            "default": "PLN"
+          },
+          "number": {
+            "type": "string",
+            "description": "Override the auto-generated number"
+          },
+          "send": {
+            "type": "boolean",
+            "description": "Send to KSeF immediately after creating"
+          },
           "lines": {
             "type": "array",
             "items": {
               "type": "object",
-              "required": ["name", "unitNetPrice"],
+              "required": [
+                "name",
+                "unitNetPrice"
+              ],
               "properties": {
-                "name": { "type": "string" },
-                "quantity": { "type": "number", "default": 1 },
-                "unit": { "type": "string", "default": "szt" },
-                "unitNetPrice": { "type": "number", "description": "Net unit price" },
-                "vatRate": { "type": "number", "enum": [23, 8, 5, 0], "default": 23 }
+                "name": {
+                  "type": "string"
+                },
+                "quantity": {
+                  "type": "number",
+                  "default": 1
+                },
+                "unit": {
+                  "type": "string",
+                  "default": "szt"
+                },
+                "unitNetPrice": {
+                  "type": "number",
+                  "description": "Net unit price"
+                },
+                "vatRate": {
+                  "type": "number",
+                  "enum": [
+                    23,
+                    8,
+                    5,
+                    0
+                  ],
+                  "default": 23
+                }
               }
             }
           }
@@ -95,8 +220,15 @@
       "description": "Send a locally created draft invoice to KSeF (returns the assigned KSeF number)",
       "schema": {
         "type": "object",
-        "required": ["id"],
-        "properties": { "id": { "type": "string", "description": "Invoice id from list_invoices" } }
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Invoice id from list_invoices"
+          }
+        }
       }
     },
     {
@@ -104,11 +236,21 @@
       "description": "Mark an invoice as paid (or unpaid with paid: false)",
       "schema": {
         "type": "object",
-        "required": ["id"],
+        "required": [
+          "id"
+        ],
         "properties": {
-          "id": { "type": "string" },
-          "paid": { "type": "boolean", "default": true },
-          "paidDate": { "type": "string", "description": "YYYY-MM-DD, default today" }
+          "id": {
+            "type": "string"
+          },
+          "paid": {
+            "type": "boolean",
+            "default": true
+          },
+          "paidDate": {
+            "type": "string",
+            "description": "YYYY-MM-DD, default today"
+          }
         }
       }
     },
@@ -117,10 +259,22 @@
       "description": "Set the Fakturownia acceptance status of a cost invoice (received=Otrzymana, accepted=Zatwierdzona, rejected=Odrzucona); in dual mode the change is pushed to Fakturownia first",
       "schema": {
         "type": "object",
-        "required": ["id", "approval"],
+        "required": [
+          "id",
+          "approval"
+        ],
         "properties": {
-          "id": { "type": "string" },
-          "approval": { "type": "string", "enum": ["received", "accepted", "rejected"] }
+          "id": {
+            "type": "string"
+          },
+          "approval": {
+            "type": "string",
+            "enum": [
+              "received",
+              "accepted",
+              "rejected"
+            ]
+          }
         }
       }
     },
@@ -129,7 +283,12 @@
       "description": "Fetch new invoices from KSeF (sales and incoming costs) for one or all companies",
       "schema": {
         "type": "object",
-        "properties": { "company": { "type": "string", "description": "Company name, id or NIP; omit for all" } }
+        "properties": {
+          "company": {
+            "type": "string",
+            "description": "Company name, id or NIP; omit for all"
+          }
+        }
       }
     },
     {
@@ -138,13 +297,38 @@
       "schema": {
         "type": "object",
         "properties": {
-          "company": { "type": "string" },
-          "month": { "type": "string", "description": "YYYY-MM" },
-          "from": { "type": "string", "description": "YYYY-MM-DD" },
-          "to": { "type": "string", "description": "YYYY-MM-DD" },
-          "query": { "type": "string", "description": "Substring across date, type, description, amount, category, matchedBy" },
-          "state": { "type": "string", "enum": ["ok", "warn", "bad", "in"] },
-          "limit": { "type": "integer", "default": 200 }
+          "company": {
+            "type": "string"
+          },
+          "month": {
+            "type": "string",
+            "description": "YYYY-MM"
+          },
+          "from": {
+            "type": "string",
+            "description": "YYYY-MM-DD"
+          },
+          "to": {
+            "type": "string",
+            "description": "YYYY-MM-DD"
+          },
+          "query": {
+            "type": "string",
+            "description": "Substring across date, type, description, amount, category, matchedBy"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "warn",
+              "bad",
+              "in"
+            ]
+          },
+          "limit": {
+            "type": "integer",
+            "default": 200
+          }
         }
       }
     },
@@ -153,16 +337,39 @@
       "description": "Pair a bank operation with an invoice (invoiceId), give it a non-invoice category, link it with its refund (refundTxId — cancelled charge + incoming refund cancel out, state 'ret'), unassign it, or verify a tentative auto-match (verify: true).",
       "schema": {
         "type": "object",
-        "required": ["txId"],
+        "required": [
+          "txId"
+        ],
         "properties": {
-          "company": { "type": "string" },
-          "txId": { "type": "string", "description": "Operation id from list_bank_transactions" },
-          "invoiceId": { "type": "string" },
-          "category": { "type": "string", "description": "e.g. opłata bankowa, podatek / ZUS, przewalutowanie; 'NKUP — bez odliczenia' marks an expense with no invoice at all (accountant books it as other costs, no tax deduction)" },
-          "matchedBy": { "type": "string", "description": "Short note on how the pairing was decided" },
-          "unassign": { "type": "boolean" },
-          "refundTxId": { "type": "string", "description": "Id of the opposite operation (equal amount, opposite sign) — links the two as a cancelled-charge/refund pair" },
-          "verify": { "type": "boolean", "description": "Confirm a match labeled 'do weryfikacji'" }
+          "company": {
+            "type": "string"
+          },
+          "txId": {
+            "type": "string",
+            "description": "Operation id from list_bank_transactions"
+          },
+          "invoiceId": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string",
+            "description": "e.g. opłata bankowa, podatek / ZUS, przewalutowanie; 'NKUP — bez odliczenia' marks an expense with no invoice at all (accountant books it as other costs, no tax deduction)"
+          },
+          "matchedBy": {
+            "type": "string",
+            "description": "Short note on how the pairing was decided"
+          },
+          "unassign": {
+            "type": "boolean"
+          },
+          "refundTxId": {
+            "type": "string",
+            "description": "Id of the opposite operation (equal amount, opposite sign) — links the two as a cancelled-charge/refund pair"
+          },
+          "verify": {
+            "type": "boolean",
+            "description": "Confirm a match labeled 'do weryfikacji'"
+          }
         }
       }
     },
@@ -171,11 +378,21 @@
       "description": "Import a bank statement PDF (base64): parses (iPKO Biznes / iPKO history), archives the ORIGINAL PDF in the statement registry, buckets operations into their months, keeps existing assignments, auto-matches new operations against invoices.",
       "schema": {
         "type": "object",
-        "required": ["dataBase64"],
+        "required": [
+          "dataBase64"
+        ],
         "properties": {
-          "company": { "type": "string" },
-          "dataBase64": { "type": "string", "description": "The statement PDF, base64-encoded" },
-          "name": { "type": "string", "description": "Original file name (for the archive)" }
+          "company": {
+            "type": "string"
+          },
+          "dataBase64": {
+            "type": "string",
+            "description": "The statement PDF, base64-encoded"
+          },
+          "name": {
+            "type": "string",
+            "description": "Original file name (for the archive)"
+          }
         }
       }
     },
@@ -185,12 +402,36 @@
       "schema": {
         "type": "object",
         "properties": {
-          "company": { "type": "string", "description": "Company name, id or NIP; optional when only one is configured" },
-          "month": { "type": "string", "description": "YYYY-MM; omit for the last months on record" },
-          "limit": { "type": "integer", "default": 6, "description": "How many recent months when month is omitted" },
-          "markRule": { "type": "string", "enum": ["zus", "pit4r"], "description": "Rule id to mark as expected-missing for the given month" },
-          "expected": { "type": "boolean", "default": true, "description": "false clears a previous expected-missing decision" },
-          "note": { "type": "string", "description": "Why the gap is expected (stored with the decision)" }
+          "company": {
+            "type": "string",
+            "description": "Company name, id or NIP; optional when only one is configured"
+          },
+          "month": {
+            "type": "string",
+            "description": "YYYY-MM; omit for the last months on record"
+          },
+          "limit": {
+            "type": "integer",
+            "default": 6,
+            "description": "How many recent months when month is omitted"
+          },
+          "markRule": {
+            "type": "string",
+            "enum": [
+              "zus",
+              "pit4r"
+            ],
+            "description": "Rule id to mark as expected-missing for the given month"
+          },
+          "expected": {
+            "type": "boolean",
+            "default": true,
+            "description": "false clears a previous expected-missing decision"
+          },
+          "note": {
+            "type": "string",
+            "description": "Why the gap is expected (stored with the decision)"
+          }
         }
       }
     },
@@ -199,11 +440,21 @@
       "description": "Add an invoice document (PDF/PNG/JPEG, base64) to the file archive: dedupes by content hash, converts images to PDF, extracts fields (NIP, dates, amounts, currency, VAT rate) and auto-matches against invoices. Follow up with attach_file to pair or create the invoice record.",
       "schema": {
         "type": "object",
-        "required": ["dataBase64", "name"],
+        "required": [
+          "dataBase64",
+          "name"
+        ],
         "properties": {
-          "company": { "type": "string" },
-          "dataBase64": { "type": "string" },
-          "name": { "type": "string", "description": "Original file name" }
+          "company": {
+            "type": "string"
+          },
+          "dataBase64": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "description": "Original file name"
+          }
         }
       }
     },
@@ -212,19 +463,43 @@
       "description": "Patch fields of a local invoice record (number, issueDate, currency, gross, net, vat, sellerName, sellerNip, buyerName, buyerNip). Local only — does not push the change to Fakturownia or KSeF.",
       "schema": {
         "type": "object",
-        "required": ["id"],
+        "required": [
+          "id"
+        ],
         "properties": {
-          "id": { "type": "string" },
-          "number": { "type": "string" },
-          "issueDate": { "type": "string" },
-          "currency": { "type": "string" },
-          "gross": { "type": "number" },
-          "net": { "type": "number" },
-          "vat": { "type": "number" },
-          "sellerName": { "type": "string" },
-          "sellerNip": { "type": "string" },
-          "buyerName": { "type": "string" },
-          "buyerNip": { "type": "string" }
+          "id": {
+            "type": "string"
+          },
+          "number": {
+            "type": "string"
+          },
+          "issueDate": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "gross": {
+            "type": "number"
+          },
+          "net": {
+            "type": "number"
+          },
+          "vat": {
+            "type": "number"
+          },
+          "sellerName": {
+            "type": "string"
+          },
+          "sellerNip": {
+            "type": "string"
+          },
+          "buyerName": {
+            "type": "string"
+          },
+          "buyerNip": {
+            "type": "string"
+          }
         }
       }
     },
@@ -234,9 +509,17 @@
       "schema": {
         "type": "object",
         "properties": {
-          "company": { "type": "string" },
-          "query": { "type": "string", "description": "Substring across name, NIP and bank accounts" },
-          "limit": { "type": "integer", "default": 100 }
+          "company": {
+            "type": "string"
+          },
+          "query": {
+            "type": "string",
+            "description": "Substring across name, NIP and bank accounts"
+          },
+          "limit": {
+            "type": "integer",
+            "default": 100
+          }
         }
       }
     },
@@ -245,18 +528,45 @@
       "description": "Update a client: bankAccounts replaces the whole list (used to recognize transfers on bank statements); in dual mode the FIRST account also syncs to the Fakturownia client record (their single bank_account field), and accounts kept in Fakturownia flow back into the local register on every client refresh. Contact/address fields are editable for local clients only — in dual mode edit those in Fakturownia.",
       "schema": {
         "type": "object",
-        "required": ["client"],
+        "required": [
+          "client"
+        ],
         "properties": {
-          "company": { "type": "string" },
-          "client": { "type": "string", "description": "Client name or NIP" },
-          "bankAccounts": { "type": "array", "items": { "type": "string" }, "description": "Full replacement list of account numbers (NRB/IBAN)" },
-          "name": { "type": "string" },
-          "nip": { "type": "string" },
-          "address1": { "type": "string" },
-          "address2": { "type": "string" },
-          "email": { "type": "string" },
-          "phone": { "type": "string" },
-          "note": { "type": "string" }
+          "company": {
+            "type": "string"
+          },
+          "client": {
+            "type": "string",
+            "description": "Client name or NIP"
+          },
+          "bankAccounts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Full replacement list of account numbers (NRB/IBAN)"
+          },
+          "name": {
+            "type": "string"
+          },
+          "nip": {
+            "type": "string"
+          },
+          "address1": {
+            "type": "string"
+          },
+          "address2": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          }
         }
       }
     },
@@ -266,8 +576,14 @@
       "schema": {
         "type": "object",
         "properties": {
-          "company": { "type": "string", "description": "Company name, id or NIP; optional when only one is configured" },
-          "limit": { "type": "integer", "default": 100 }
+          "company": {
+            "type": "string",
+            "description": "Company name, id or NIP; optional when only one is configured"
+          },
+          "limit": {
+            "type": "integer",
+            "default": 100
+          }
         }
       }
     },
@@ -276,28 +592,78 @@
       "description": "Pair an archived invoice file with an invoice: pass invoiceId to link to an existing record, or createInvoice {dir, number, issueDate, sellerNip, sellerName, net, vat, gross, currency, paid} to create a new record from the document and link it.",
       "schema": {
         "type": "object",
-        "required": ["fileId"],
+        "required": [
+          "fileId"
+        ],
         "properties": {
-          "company": { "type": "string" },
-          "fileId": { "type": "string", "description": "File id from list_unmatched_files" },
-          "invoiceId": { "type": "string" },
-          "matchedBy": { "type": "string", "description": "Short note on how the pairing was decided" },
+          "company": {
+            "type": "string"
+          },
+          "fileId": {
+            "type": "string",
+            "description": "File id from list_unmatched_files"
+          },
+          "invoiceId": {
+            "type": "string"
+          },
+          "matchedBy": {
+            "type": "string",
+            "description": "Short note on how the pairing was decided"
+          },
           "createInvoice": {
             "type": "object",
             "properties": {
-              "dir": { "type": "string", "enum": ["sale", "cost"], "default": "cost" },
-              "number": { "type": "string" },
-              "issueDate": { "type": "string" },
-              "sellerNip": { "type": "string", "description": "Polish NIP (digits)" },
-              "sellerName": { "type": "string" },
-              "sellerVatId": { "type": "string", "description": "Foreign VAT ID (e.g. IE9692928F) when there is no Polish NIP" },
-              "sellerAddress1": { "type": "string", "description": "Street line" },
-              "sellerAddress2": { "type": "string", "description": "\"post-code city, country\", e.g. \"D04 X2K5 Dublin 4, Ireland\"" },
-              "gross": { "type": "number", "description": "Gross total in the document currency" },
-              "vatRate": { "description": "23/8/5/0, or \"zw\"/\"np\"/\"disabled\"; defaults to the rate read from the document" },
-              "currency": { "type": "string", "description": "Defaults to the currency read from the document" },
-              "paid": { "type": "boolean" },
-              "paidDate": { "type": "string", "description": "YYYY-MM-DD, e.g. the card-charge date from the bank statement" }
+              "dir": {
+                "type": "string",
+                "enum": [
+                  "sale",
+                  "cost"
+                ],
+                "default": "cost"
+              },
+              "number": {
+                "type": "string"
+              },
+              "issueDate": {
+                "type": "string"
+              },
+              "sellerNip": {
+                "type": "string",
+                "description": "Polish NIP (digits)"
+              },
+              "sellerName": {
+                "type": "string"
+              },
+              "sellerVatId": {
+                "type": "string",
+                "description": "Foreign VAT ID (e.g. IE9692928F) when there is no Polish NIP"
+              },
+              "sellerAddress1": {
+                "type": "string",
+                "description": "Street line"
+              },
+              "sellerAddress2": {
+                "type": "string",
+                "description": "\"post-code city, country\", e.g. \"D04 X2K5 Dublin 4, Ireland\""
+              },
+              "gross": {
+                "type": "number",
+                "description": "Gross total in the document currency"
+              },
+              "vatRate": {
+                "description": "23/8/5/0, or \"zw\"/\"np\"/\"disabled\"; defaults to the rate read from the document"
+              },
+              "currency": {
+                "type": "string",
+                "description": "Defaults to the currency read from the document"
+              },
+              "paid": {
+                "type": "boolean"
+              },
+              "paidDate": {
+                "type": "string",
+                "description": "YYYY-MM-DD, e.g. the card-charge date from the bank statement"
+              }
             }
           }
         }
@@ -309,8 +675,13 @@
       "schema": {
         "type": "object",
         "properties": {
-          "company": { "type": "string" },
-          "limit": { "type": "integer", "default": 30 }
+          "company": {
+            "type": "string"
+          },
+          "limit": {
+            "type": "integer",
+            "default": 30
+          }
         }
       }
     },
@@ -320,8 +691,18 @@
       "schema": {
         "type": "object",
         "properties": {
-          "company": { "type": "string", "description": "Company name, id or NIP; optional when only one is configured" },
-          "action": { "type": "string", "enum": ["run", "status"], "default": "run" }
+          "company": {
+            "type": "string",
+            "description": "Company name, id or NIP; optional when only one is configured"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "run",
+              "status"
+            ],
+            "default": "run"
+          }
         }
       }
     },
@@ -330,7 +711,12 @@
       "description": "Run the full Fakturownia.pl history import for a company (idempotent, re-runnable)",
       "schema": {
         "type": "object",
-        "properties": { "company": { "type": "string", "description": "Company name, id or NIP; optional when only one is configured" } }
+        "properties": {
+          "company": {
+            "type": "string",
+            "description": "Company name, id or NIP; optional when only one is configured"
+          }
+        }
       }
     }
   ]

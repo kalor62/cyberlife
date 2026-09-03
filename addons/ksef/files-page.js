@@ -144,7 +144,7 @@ export function renderFilesPage(el, deps) {
                 <td>${esc(f.docDate || f.month || '—')}</td>
                 <td style="max-width:340px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap" title="${esc(f.name)}">${esc(f.name)}</td>
                 <td>${esc(f.number || '—')}</td>
-                <td style="text-align:right">${f.gross ? zl(f.gross) : '—'}</td>
+                <td style="text-align:right">${f.gross ? zl(f.gross, f.currency || 'PLN') : '—'}</td>
                 <td>${inv
                   ? `${esc(inv.number || inv.ksefNumber || '—')} <span class="ksefad-muted">${esc(invDesc(inv, 40))}</span>`
                   : '<span style="color:var(--error, #f38ba8)">✗ brak</span>'}</td>

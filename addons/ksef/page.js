@@ -1160,7 +1160,7 @@ export function openPdfOverlay(deps, fileRec) {
     <div class="ksefad-modal lg" style="width:min(1100px, 96vw); height:92vh; display:flex; flex-direction:column; gap:10px">
       <div style="display:flex; align-items:baseline; gap:12px">
         <h2 style="margin:0; font-size:16px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">📄 ${esc(fileRec.name || fileRec.key)}</h2>
-        <span class="ksefad-muted">${esc(fileRec.docDate || fileRec.month || '')}${fileRec.gross ? ` · ${zl(fileRec.gross)}` : ''}</span>
+        <span class="ksefad-muted">${esc(fileRec.docDate || fileRec.month || '')}${fileRec.gross ? ` · ${zl(fileRec.gross, fileRec.currency || 'PLN')}` : ''}</span>
         <span style="flex:1"></span>
         <button class="ksefad-btn" data-close>Zamknij (Esc)</button>
       </div>
