@@ -875,10 +875,14 @@ const REPORT_TEMPLATES = {
 // Invoices the accountant cannot pull from KSeF herself — everything of
 // the period without a KSeF number (foreign invoices above all); DW and
 // proformas are not invoices and stay out
+// Non-KSeF documents issued in the selected period. Calendar bounds, not
+// the first/last operation date — a 1st-of-month invoice must not fall out
+// of the report just because the bank was quiet that day.
 function nonKsefInvoices(store, company, txs) {
-  const dates = txs.map((t) => t.date).sort();
-  const from = dates[0];
-  const to = dates[dates.length - 1];
+  const period = periodOf(bankView);
+  const txDates = txs.map((t) => t.date).sort();
+  const from = period.from || txDates[0];
+  const to = period.to || txDates[txDates.length - 1];
   if (!from) return [];
   // Sales first, then costs — the merged attachment and the report tables
   // share this order
