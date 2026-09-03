@@ -310,6 +310,18 @@ function makeContext(addon, inst) {
       }
     },
 
+    // Copy a blob-store file into ~/Downloads (never overwrites — a taken
+    // name gets a numeric suffix). Returns {path, name}.
+    async exportDataFile(path, { name = '' } = {}) {
+      const res = await fetch(`${API_BASE}/api/addons/export`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ addon: addon.id, path, name }),
+      });
+      if (!res.ok) throw new Error(`export ${path}: ${res.status} ${await res.text()}`);
+      return res.json();
+    },
+
     // Concatenate stored PDFs into a new blob-store file (poppler
     // pdfunite); open: true also opens the result in the system viewer
     async mergePdfs(keys, outPath, { open = false } = {}) {

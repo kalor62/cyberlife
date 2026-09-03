@@ -891,6 +891,18 @@ function nonKsefInvoices(store, company, txs) {
     .sort((a, b) => (a.dir === b.dir ? a.issueDate.localeCompare(b.issueDate) : (a.dir === 'sale' ? -1 : 1)));
 }
 
+// Deliverables also land in ~/Downloads — the blob store under ~/.cyberlife
+// is invisible to the user. Returns the file name there, or '' if it failed.
+async function exportToDownloads(deps, key) {
+  try {
+    const res = await deps.cl.exportDataFile(key);
+    return res.name || '';
+  } catch (err) {
+    deps.cl.log('export to Downloads failed:', err.message || err);
+    return '';
+  }
+}
+
 async function printReport(deps, company, month, txs, mode = 'local') {
   const { store } = deps;
   const byAccount = new Map();
@@ -922,7 +934,10 @@ async function printReport(deps, company, month, txs, mode = 'local') {
       await deps.cl.mergePdfs(withPdf.map((i) => fileMap.get(i.id).key), outName, { open: mode === 'local' });
       mergedKey = outName;
       mergedNote = `Załącznik: <b>${withPdf.length}</b> faktur spoza KSeF w osobnym pliku PDF (${esc(outName.split('/').pop())}).`;
-      if (mode === 'local') bankView.info = `✓ Raport (przeglądarka) + ${withPdf.length} faktur spoza KSeF w jednym PDF (otwarty).`;
+      const exported = await exportToDownloads(deps, outName);
+      if (mode === 'local') {
+        bankView.info = `✓ Raport (przeglądarka) + ${withPdf.length} faktur spoza KSeF w jednym PDF (otwarty${exported ? `, kopia w Downloads: ${exported}` : ''}).`;
+      }
     } catch (err) {
       deps.cl.log('invoice merge failed:', err);
       mergedNote = `<span style="color:#c0392b">Nie udało się skleić załącznika PDF: ${esc(err.message || err)}</span>`;
@@ -999,6 +1014,7 @@ async function printReport(deps, company, month, txs, mode = 'local') {
     const slug = month.replace(/[^\dA-Za-z-]+/g, '_');
     const reportKey = `reports/rozliczenie-${slug}.pdf`;
     await deps.cl.htmlToPdf(printDocHtml(title, body), reportKey);
+    await exportToDownloads(deps, reportKey);
     const monthsInPeriod = new Set(txs.map((t) => t.date.slice(0, 7)));
     const stmtKeys = store.stmtFiles(company.id)
       .filter((s) => (s.months || []).some((m) => monthsInPeriod.has(m)))

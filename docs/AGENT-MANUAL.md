@@ -148,6 +148,9 @@ live (`kanban-changed`, `automations-changed`, `widgets-changed`, …).
      lastPrompt}` of the session being viewed (session may be null)
    - `cl.pdfText(dataBase64)` — layout-preserving text of a PDF via the
      app's pdftotext bridge (needs poppler installed; ≤15MB)
+   - `cl.exportDataFile(path, {name?})` — copy a blob-store file into the
+     user's ~/Downloads (never overwrites); returns `{path, name}`. Use it
+     for deliverables the user must find outside the app
    - `cl.mergePdfs(keys, outPath, {open})` — concatenate stored PDFs
      (poppler pdfunite) into a new blob-store file; `open: true` also
      opens the result in the system viewer

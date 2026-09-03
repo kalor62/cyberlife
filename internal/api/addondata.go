@@ -371,3 +371,81 @@ func (s *Server) handleAddonDataAsset(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	http.ServeFile(w, r, full)
 }
+
+type addonExportRequest struct {
+	Addon string `json:"addon"`
+	Path  string `json:"path"`
+	Name  string `json:"name,omitempty"`
+}
+
+// handleAddonExport copies a stored blob into the user's Downloads folder —
+// the one place addon output (merged invoice PDFs, reports) is findable
+// without knowing about ~/.cyberlife. Never overwrites: a taken name gets
+// a numeric suffix.
+func (s *Server) handleAddonExport(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		writeErr(w, http.StatusMethodNotAllowed, fmt.Errorf("POST only"))
+		return
+	}
+	var req addonExportRequest
+	if !decodeBody(w, r, &req) {
+		return
+	}
+	addon, ok := addons.Get(req.Addon, s.manager.GetAddonsEnabled())
+	if !ok || !addon.Enabled {
+		writeErr(w, http.StatusForbidden, fmt.Errorf("addon %q is not enabled", req.Addon))
+		return
+	}
+	rel, ok := cleanRelPath(req.Path)
+	if !ok {
+		writeErr(w, http.StatusBadRequest, fmt.Errorf("invalid path %q", req.Path))
+		return
+	}
+	root, err := paths.AddonData()
+	if err != nil {
+		writeErr(w, http.StatusInternalServerError, err)
+		return
+	}
+	src := filepath.Join(root, addon.ID, filepath.FromSlash(rel))
+	data, err := os.ReadFile(src)
+	if err != nil {
+		writeErr(w, http.StatusNotFound, fmt.Errorf("stored file %q not found", req.Path))
+		return
+	}
+	home, err := os.UserHomeDir()
+	if err != nil {
+		writeErr(w, http.StatusInternalServerError, err)
+		return
+	}
+	downloads := filepath.Join(home, "Downloads")
+	if err := os.MkdirAll(downloads, 0o755); err != nil {
+		writeErr(w, http.StatusInternalServerError, err)
+		return
+	}
+	name := filepath.Base(filepath.FromSlash(rel))
+	if n := strings.TrimSpace(req.Name); n != "" {
+		name = filepath.Base(n)
+	}
+	dest := uniquePath(filepath.Join(downloads, name))
+	if err := os.WriteFile(dest, data, 0o644); err != nil {
+		writeErr(w, http.StatusInternalServerError, err)
+		return
+	}
+	logging.Info("addon file exported to Downloads", "addon", addon.ID, "path", rel, "dest", logging.MaskPath(dest))
+	writeJSON(w, http.StatusOK, map[string]any{"ok": true, "path": dest, "name": filepath.Base(dest)})
+}
+
+func uniquePath(p string) string {
+	if _, err := os.Stat(p); err != nil {
+		return p
+	}
+	ext := filepath.Ext(p)
+	base := strings.TrimSuffix(p, ext)
+	for i := 2; i < 1000; i++ {
+		candidate := fmt.Sprintf("%s (%d)%s", base, i, ext)
+		if _, err := os.Stat(candidate); err != nil {
+			return candidate
+		}
+	}
+	return fmt.Sprintf("%s-%d%s", base, time.Now().Unix(), ext)
+}
